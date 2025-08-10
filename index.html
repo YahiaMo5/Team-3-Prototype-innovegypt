@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة تطوير الكوادر الشبابية</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>منصة تطوير الكوادر</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="#" class="nav-link" onclick="showPage('dashboard')">الرئيسية</a>
+                <a href="#" class="nav-link" onclick="showPage('mentors')">المينتورز</a>
+                <a href="#" class="nav-link" onclick="showPage('courses')">الكورسات</a>
+                <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
+                <a href="#" class="nav-link" onclick="showPage('points')">النقاط والتقييمات</a>
+                <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Page -->
+    <div id="login-page" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h1>منصة تطوير الكوادر الشبابية</h1>
+                    <p>ربط الشباب بالمينتورز والكورسات المناسبة</p>
+                </div>
+                
+                <div class="login-tabs">
+                    <button class="tab-btn active" onclick="switchTab('youth')">شباب</button>
+                    <button class="tab-btn" onclick="switchTab('mentor')">مينتور</button>
+                </div>
+
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="email">البريد الإلكتروني</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">كلمة المرور</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="login-btn">تسجيل الدخول</button>
+                </form>
+
+                <div class="demo-login">
+                    <p>للبروتوتايب - اضغط لتسجيل دخول تجريبي:</p>
+                    <button class="demo-btn" onclick="demoLogin()">تسجيل دخول تجريبي</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>مرحباً <span id="user-name">أحمد</span> 👋</h1>
+                <p>اكتشف المينتورز والكورسات المناسبة لمستواك</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-star"></i>
+                    <h3>1250</h3>
+                    <p>نقطة</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3>8</h3>
+                    <p>مينتورز متابعين</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-book"></i>
+                    <h3>12</h3>
+                    <p>كورس مكتمل</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>4.8</h3>
+                    <p>تقييم</p>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h2>المينتورز الموصى بهم</h2>
+                <div class="mentors-grid" id="recommended-mentors">
+                    <!-- Mentors will be loaded here -->
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h2>الكورسات الموصى بها</h2>
+                <div class="courses-grid" id="recommended-courses">
+                    <!-- Courses will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mentors Page -->
+    <div id="mentors-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>المينتورز</h1>
+                <div class="filters">
+                    <select id="specialization-filter">
+                        <option value="">جميع التخصصات</option>
+                        <option value="programming">برمجة</option>
+                        <option value="design">تصميم</option>
+                        <option value="marketing">تسويق</option>
+                        <option value="business">أعمال</option>
+                    </select>
+                    <select id="level-filter">
+                        <option value="">جميع المستويات</option>
+                        <option value="beginner">مبتدئ</option>
+                        <option value="intermediate">متوسط</option>
+                        <option value="advanced">متقدم</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mentors-grid" id="all-mentors">
+                <!-- All mentors will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Page -->
+    <div id="courses-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>الكورسات</h1>
+                <div class="filters">
+                    <select id="course-specialization-filter">
+                        <option value="">جميع التخصصات</option>
+                        <option value="programming">برمجة</option>
+                        <option value="design">تصميم</option>
+                        <option value="marketing">تسويق</option>
+                        <option value="business">أعمال</option>
+                    </select>
+                    <select id="course-level-filter">
+                        <option value="">جميع المستويات</option>
+                        <option value="beginner">مبتدئ</option>
+                        <option value="intermediate">متوسط</option>
+                        <option value="advanced">متقدم</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="courses-grid" id="all-courses">
+                <!-- All courses will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profile-page" class="page">
+        <div class="container">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="profile-info">
+                    <h1 id="profile-name">أحمد محمد</h1>
+                    <p id="profile-email">ahmed@example.com</p>
+                    <div class="profile-stats">
+                        <span><i class="fas fa-star"></i> 1250 نقطة</span>
+                        <span><i class="fas fa-calendar"></i> عضو منذ 6 أشهر</span>
+                    </div>
+                </div>
+                <button class="edit-profile-btn" onclick="editProfile()">تعديل الملف</button>
+            </div>
+
+            <div class="profile-sections">
+                <div class="profile-section">
+                    <h2>المعلومات الشخصية</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>العمر:</label>
+                            <span>25 سنة</span>
+                        </div>
+                        <div class="info-item">
+                            <label>المستوى التعليمي:</label>
+                            <span>بكالوريوس</span>
+                        </div>
+                        <div class="info-item">
+                            <label>التخصص:</label>
+                            <span>هندسة برمجيات</span>
+                        </div>
+                        <div class="info-item">
+                            <label>الخبرة:</label>
+                            <span>3 سنوات</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h2>المهارات والتخصصات</h2>
+                    <div class="skills-grid" id="user-skills">
+                        <!-- Skills will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h2>التقدم والإنجازات</h2>
+                    <div class="achievements-grid">
+                        <div class="achievement-card">
+                            <i class="fas fa-medal"></i>
+                            <h3>مكمل 10 كورسات</h3>
+                            <p>أكملت 10 كورسات بنجاح</p>
+                        </div>
+                        <div class="achievement-card">
+                            <i class="fas fa-fire"></i>
+                            <h3>متعلم نشط</h3>
+                            <p>تعلمت لمدة 30 يوم متتالي</p>
+                        </div>
+                        <div class="achievement-card">
+                            <i class="fas fa-users"></i>
+                            <h3>متعاون</h3>
+                            <p>ساعدت 5 متعلمين آخرين</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Points Page -->
+    <div id="points-page" class="page">
+        <div class="container">
+            <div class="points-header">
+                <h1>النقاط والتقييمات</h1>
+                <div class="points-summary">
+                    <div class="points-card">
+                        <h2>1250</h2>
+                        <p>إجمالي النقاط</p>
+                    </div>
+                    <div class="points-card">
+                        <h2>4.8</h2>
+                        <p>متوسط التقييم</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="points-sections">
+                <div class="points-section">
+                    <h2>كيفية كسب النقاط</h2>
+                    <div class="points-rules">
+                        <div class="rule-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h3>إكمال كورس</h3>
+                                <p>100 نقطة لكل كورس مكتمل</p>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h3>تقييم مينتور</h3>
+                                <p>50 نقطة لكل تقييم</p>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h3>متابعة يومية</h3>
+                                <p>10 نقاط لكل يوم متابعة</p>
+                            </div>
+                        </div>
+                        <div class="rule-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h3>مساعدة الآخرين</h3>
+                                <p>25 نقطة لكل مساعدة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="points-section">
+                    <h2>سجل النقاط</h2>
+                    <div class="points-history" id="points-history">
+                        <!-- Points history will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mentor Detail Modal -->
+    <div id="mentor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeMentorModal()">&times;</span>
+            <div id="mentor-detail-content">
+                <!-- Mentor details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
