@@ -594,8 +594,8 @@ function logout() {
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-users"></i>
-                    <h3>8</h3>
-                    <p>مينتورز متابعين</p>
+                    <h3>1</h3>
+                    <p>مينتور متابع</p>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-book"></i>
@@ -606,6 +606,13 @@ function logout() {
                     <i class="fas fa-trophy"></i>
                     <h3>4.8</h3>
                     <p>تقييم</p>
+                </div>
+            </div>
+
+            <div class="assigned-mentor-section">
+                <h2>المينتور المُعيَّن لك</h2>
+                <div id="assigned-mentor-card">
+                    <!-- Assigned mentor will be loaded here -->
                 </div>
             </div>
 
@@ -909,12 +916,51 @@ function loadSuggestedVideos(students) {
 
     // Youth pages
     window.loadAssignedMentor = function loadAssignedMentor() {
-        const container = document.getElementById('recommended-mentors');
+        const container = document.getElementById('assigned-mentor-card');
         if (!container) return;
-        const mentors = mockMentors
-            .filter(m => !currentUser || !currentUser.specialization || m.specialization === currentUser.specialization)
-            .slice(0, 3);
-        container.innerHTML = mentors.map(renderMentorCard).join('');
+        
+        // Find the assigned mentor for the current user
+        const assignedMentor = mockMentors.find(m => m.name === currentUser.assignedMentor);
+        
+        if (assignedMentor) {
+            container.innerHTML = `
+                <div class="mentor-card assigned-mentor" onclick="showPage('mentors')">
+                    <div class="mentor-header">
+                        <div class="mentor-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="mentor-info">
+                            <h3>${assignedMentor.name}</h3>
+                            <p class="mentor-specialization">${assignedMentor.specialization}</p>
+                            <p class="mentor-experience">${assignedMentor.experience}</p>
+                        </div>
+                        <div class="mentor-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${assignedMentor.rating}</span>
+                        </div>
+                    </div>
+                    <div class="mentor-description">
+                        <p>${assignedMentor.description}</p>
+                    </div>
+                    <div class="mentor-tags">
+                        ${assignedMentor.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="mentor-actions">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); showPage('mentors')">
+                            <i class="fas fa-comments"></i> بدء محادثة
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="no-mentor-card">
+                    <i class="fas fa-user-plus"></i>
+                    <h3>لم يتم تعيين مينتور بعد</h3>
+                    <p>سيتم تعيين مينتور مناسب لك قريباً</p>
+                </div>
+            `;
+        }
     };
 
     window.loadRecommendedCourses = function loadRecommendedCourses() {
@@ -1428,6 +1474,21 @@ function renderYouthMentorChat() {
             </div>
         </div>`;
     loadPersistedChat('youth');
+    
+    // Add welcome message if chat is empty
+    setTimeout(() => {
+        const messages = document.getElementById('chat-messages-youth');
+        if (messages && messages.children.length === 0) {
+            const welcomeMessage = {
+                from: 'mentor',
+                text: `مرحباً ${currentUser.name}! أنا ${assignedMentor.name}، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟`,
+                time: new Date().toLocaleTimeString('ar-EG'),
+                id: Date.now()
+            };
+            displayMessage(messages, welcomeMessage);
+            persistChatMessage('youth', welcomeMessage);
+        }
+    }, 500);
 }
 
 function renderMentorStudentsChat() {
@@ -1464,11 +1525,96 @@ function sendChatMessage(target) {
     const input = document.getElementById(inputId);
     const messages = document.getElementById(msgId);
     if (!input || !messages || !input.value.trim()) return;
-    const message = { from: userType, text: input.value, time: new Date().toLocaleTimeString('ar-EG') };
-    messages.insertAdjacentHTML('beforeend', `<div class="message ${userType}"><div class="content">${message.text}</div><span class="time">${message.time}</span></div>`);
+    
+    const messageText = input.value.trim();
+    const message = { 
+        from: userType, 
+        text: messageText, 
+        time: new Date().toLocaleTimeString('ar-EG'),
+        id: Date.now()
+    };
+    
+    // Add user message
+    displayMessage(messages, message);
     persistChatMessage(target, message);
     input.value = '';
     messages.scrollTop = messages.scrollHeight;
+    
+    // Auto-reply for demonstration (simulate response from other user)
+    setTimeout(() => {
+        generateAutoReply(target, messageText, messages);
+    }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+}
+
+function displayMessage(messagesContainer, message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${message.from}`;
+    messageElement.innerHTML = `
+        <div class="content">${message.text}</div>
+        <span class="time">${message.time}</span>
+    `;
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function generateAutoReply(target, userMessage, messagesContainer) {
+    const isYouthMode = target === 'youth';
+    const replyFrom = isYouthMode ? 'mentor' : 'youth';
+    
+    // Simple auto-reply based on user message content
+    let replyText = getAutoReplyText(userMessage, isYouthMode);
+    
+    const replyMessage = {
+        from: replyFrom,
+        text: replyText,
+        time: new Date().toLocaleTimeString('ar-EG'),
+        id: Date.now()
+    };
+    
+    displayMessage(messagesContainer, replyMessage);
+    persistChatMessage(target, replyMessage);
+}
+
+function getAutoReplyText(userMessage, isYouthMode) {
+    const message = userMessage.toLowerCase();
+    
+    if (isYouthMode) {
+        // Auto-replies from mentor to youth
+        if (message.includes('مساعدة') || message.includes('سؤال')) {
+            return 'بالطبع! أنا هنا لمساعدتك. ما هو السؤال المحدد؟';
+        } else if (message.includes('كورس') || message.includes('تعلم')) {
+            return 'ممتاز! أنصحك بالبدء بالأساسيات أولاً. هل تريد توصيات لكورسات معينة؟';
+        } else if (message.includes('مشروع') || message.includes('عمل')) {
+            return 'رائع! المشاريع العملية مهمة جداً. تأكد من تطبيق ما تتعلمه عملياً.';
+        } else if (message.includes('شكر') || message.includes('ممتن')) {
+            return 'العفو! هذا واجبي. استمر في التعلم وسأكون هنا لدعمك.';
+        } else {
+            const replies = [
+                'فهمت وجهة نظرك. هل يمكنك توضيح أكثر؟',
+                'هذا سؤال جيد! دعني أفكر في أفضل طريقة للمساعدة.',
+                'أقدر تفاعلك. ما رأيك في أن نبدأ بخطة عملية؟',
+                'ممتاز! أنا معك في هذه الرحلة التعليمية.'
+            ];
+            return replies[Math.floor(Math.random() * replies.length)];
+        }
+    } else {
+        // Auto-replies from youth to mentor
+        if (message.includes('كورس') || message.includes('تعلم')) {
+            return 'شكراً لك! سأبدأ بالكورس المقترح وأخبرك بالتقدم.';
+        } else if (message.includes('مشروع')) {
+            return 'فكرة رائعة! سأعمل على هذا المشروع وأرسل لك النتائج.';
+        } else if (message.includes('ممتاز') || message.includes('رائع')) {
+            return 'شكراً لتشجيعك! هذا يحفزني أكثر للاستمرار.';
+        } else {
+            const replies = [
+                'شكراً لك على المساعدة والتوجيه!',
+                'أقدر وقتك ونصائحك القيمة.',
+                'سأطبق ما تعلمته وأخبرك بالنتائج.',
+                'ممتن لوجودك كمينتور لي!'
+            ];
+            return replies[Math.floor(Math.random() * replies.length)];
+        }
+    }
 }
 
 function persistChatMessage(target, message) {
@@ -1484,7 +1630,15 @@ function loadPersistedChat(target) {
     const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
     const messages = document.getElementById(msgId);
     if (!messages) return;
-    list.forEach(m => messages.insertAdjacentHTML('beforeend', `<div class="message ${m.from}"><div class="content">${m.text}</div><span class="time">${m.time}</span></div>`));
+    
+    // Clear existing messages first
+    messages.innerHTML = '';
+    
+    // Load all persisted messages
+    list.forEach(message => {
+        displayMessage(messages, message);
+    });
+    
     messages.scrollTop = messages.scrollHeight;
 }
 
@@ -1549,4 +1703,19 @@ function openMentorChat(studentId) {
             </div>
         </div>`;
     loadPersistedChat(s.id);
+    
+    // Add welcome message if chat is empty
+    setTimeout(() => {
+        const messages = document.getElementById(`chat-messages-${s.id}`);
+        if (messages && messages.children.length === 0) {
+            const welcomeMessage = {
+                from: 'youth',
+                text: `مرحباً د. ${currentUser.name}! أنا ${s.name}. سعيد بالتواصل معك!`,
+                time: new Date().toLocaleTimeString('ar-EG'),
+                id: Date.now()
+            };
+            displayMessage(messages, welcomeMessage);
+            persistChatMessage(s.id, welcomeMessage);
+        }
+    }, 500);
 }

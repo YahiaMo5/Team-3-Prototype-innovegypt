@@ -956,6 +956,136 @@ body {
     flex-wrap: wrap;
 }
 
+/* Assigned Mentor Section */
+.assigned-mentor-section {
+    margin: 30px 0;
+}
+
+.assigned-mentor-section h2 {
+    color: #1F2937;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.mentor-card.assigned-mentor {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.mentor-card.assigned-mentor:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+}
+
+.mentor-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.mentor-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.mentor-info {
+    flex: 1;
+}
+
+.mentor-info h3 {
+    font-size: 1.25rem;
+    margin-bottom: 5px;
+}
+
+.mentor-specialization {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.mentor-experience {
+    opacity: 0.8;
+    font-size: 0.85rem;
+}
+
+.mentor-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.1rem;
+}
+
+.mentor-description {
+    margin: 15px 0;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+.mentor-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.mentor-tags .tag {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+.mentor-actions {
+    margin-top: 20px;
+}
+
+.mentor-actions .btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.mentor-actions .btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.no-mentor-card {
+    background: #F9FAFB;
+    border: 2px dashed #D1D5DB;
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #6B7280;
+}
+
+.no-mentor-card i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: #9CA3AF;
+}
+
+.no-mentor-card h3 {
+    color: #374151;
+    margin-bottom: 10px;
+}
+
 /* Mentor Dashboard Additions */
 .mentor-dashboard-grid {
     display: grid;
