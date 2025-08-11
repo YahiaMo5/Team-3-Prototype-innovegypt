@@ -998,69 +998,59 @@ function loadSuggestedVideos(students) {
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>`;
         } else {
-            // Unqualified detailed layout
-            const mentor = mockMentors.find(m => m.name === (currentUser.assignedMentor || '')) || null;
+            // Unqualified detailed layout (single card with sections)
             const suggestions = getSuggestionsForStudent(currentUser.id || -1);
-            const blockStyle = (bg) => `background:${bg}; padding:16px; border-radius:12px; margin-top:14px;`;
-            const titleStyle = 'margin:0 0 8px 0;';
+            const chip = (text, cls = 'neutral') => `<span class="chip ${cls}">${text}</span>`;
 
             section.innerHTML = `
-                <h2>الحالة</h2>
-                <div style="${blockStyle('#fff3f3')}">
-                    <h3 style="${titleStyle}"><span class="status-badge unqualified">غير مؤهل ويحتاج لتطوير</span></h3>
-                    <div class="info-grid">
-                        <div><strong>الاسم:</strong> ${currentUser.name}</div>
-                        <div><strong>العمر:</strong> ${currentUser.age}</div>
-                        <div><strong>المؤهل:</strong> ${currentUser.qualification || currentUser.education || 'غير متاح'}</div>
-                        <div><strong>التخصص:</strong> ${currentUser.specialization}</div>
-                        <div><strong>المستوى:</strong> ${currentUser.level}</div>
-                        <div><strong>الخبرة:</strong> ${currentUser.experience}</div>
+                <div class="status-section-card">
+                    <h3 class="section-title">الحالة</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`الاسم: ${currentUser.name}`, 'neutral')}
+                        ${chip(`العمر: ${currentUser.age}`, 'neutral')}
+                        ${chip(`المؤهل: ${currentUser.qualification || currentUser.education || 'غير متاح'}`, 'neutral')}
+                        ${chip(`التخصص: ${currentUser.specialization}`, 'neutral')}
+                        ${chip(`المستوى: ${currentUser.level}`, 'neutral')}
+                        ${chip(`الخبرة: ${currentUser.experience}`, 'neutral')}
                     </div>
-                </div>
 
-                <div style="${blockStyle('#f7f7f7')}">
-                    <h3 style="${titleStyle}">معلومات التطوير</h3>
-                    <div class="info-grid">
-                        <div><strong>الوظيفة الحالية:</strong> ${currentUser.currentJob || 'لا توجد'}</div>
-                        <div><strong>الراتب:</strong> ${currentUser.salary || 'غير متاح'}</div>
-                        <div><strong>الهدف:</strong> ${currentUser.goals || 'غير محدد'}</div>
+                    <h3 class="section-title">معلومات التطوير</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`الوظيفة الحالية: ${currentUser.currentJob || 'لا توجد'}`, 'neutral')}
+                        ${chip(`الراتب: ${currentUser.salary || 'غير متاح'}`, 'neutral')}
+                        ${chip(`الهدف: ${currentUser.goals || 'غير محدد'}`, 'neutral')}
                     </div>
-                </div>
 
-                <div style="${blockStyle('#ffe5e5')}">
-                    <h3 style="${titleStyle}">التحديات</h3>
-                    ${Array.isArray(currentUser.challenges) && currentUser.challenges.length ? `
-                        <ul>
-                            ${currentUser.challenges.map(c => `<li>${c}</li>`).join('')}
-                        </ul>` : '<p>غير متاح</p>'}
-                </div>
-
-                <div style="${blockStyle('#e6f3ff')}">
-                    <h3 style="${titleStyle}">المهارات القوية</h3>
-                    ${Array.isArray(currentUser.strengths) && currentUser.strengths.length ? `
-                        <div class="skills-grid">
-                            ${currentUser.strengths.map(s => `<span class=\"skill-tag\">${s}</span>`).join('')}
-                        </div>` : '<p>غير متاح</p>'}
-                </div>
-
-                <div style="${blockStyle('#f0f0f0')}">
-                    <h3 style="${titleStyle}">مجالات التحسين</h3>
-                    ${Array.isArray(currentUser.needsImprovement) && currentUser.needsImprovement.length ? `
-                        <ul>
-                            ${currentUser.needsImprovement.map(n => `<li>${n}</li>`).join('')}
-                        </ul>` : '<p>غير متاح</p>'}
-                </div>
-
-                <div style="${blockStyle('#ffe8a3')}">
-                    <h3 style="${titleStyle}">معلومات المينتور المتابع</h3>
-                    <div class="info-grid">
-                        <div><strong>المينتور:</strong> ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</div>
-                        <div><strong>آخر تواصل:</strong> ${currentUser.lastContact || 'غير متاح'}</div>
-                        <div><strong>تقييم الشاب:</strong> ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}</div>
+                    <h3 class="section-title">التحديات</h3>
+                    <div class="chip-list danger">
+                        ${Array.isArray(currentUser.challenges) && currentUser.challenges.length
+                            ? currentUser.challenges.map(c => chip(c, 'danger')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
                     </div>
-                    <div style="margin-top:10px;">
-                        <h4 style="${titleStyle}">اقتراحات المينتور</h4>
-                        ${suggestions.length ? `
+
+                    <h3 class="section-title">المهارات القوية</h3>
+                    <div class="chip-list sky">
+                        ${Array.isArray(currentUser.strengths) && currentUser.strengths.length
+                            ? currentUser.strengths.map(s => chip(s, 'sky')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
+                    </div>
+
+                    <h3 class="section-title">مجالات التحسين</h3>
+                    <div class="chip-list gray">
+                        ${Array.isArray(currentUser.needsImprovement) && currentUser.needsImprovement.length
+                            ? currentUser.needsImprovement.map(n => chip(n, 'gray')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
+                    </div>
+
+                    <h3 class="section-title">معلومات المينتور المتابع</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`المينتور: ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}`, 'neutral')}
+                        ${chip(`آخر تواصل: ${currentUser.lastContact || 'غير متاح'}`, 'neutral')}
+                        ${chip(`تقييم الشاب: ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}`, 'neutral')}
+                    </div>
+
+                    <h4 class="section-title" style="border-bottom: none;">اقتراحات المينتور</h4>
+                    ${suggestions.length ? `
                         <div class="videos-grid">
                             ${suggestions.map(s => `
                                 <div class=\"video-suggestion-card\">
@@ -1072,14 +1062,13 @@ function loadSuggestedVideos(students) {
                                 </div>
                             `).join('')}
                         </div>` : '<p>لا توجد اقتراحات بعد.</p>'}
-                    </div>
-                </div>
 
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
-                    <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
-                    <button class="btn btn-secondary" onclick="openLearningPath()">مسار التعلم</button>
-                    <button class="btn btn-secondary" onclick="openMentorCourses()">كورسات المنتور</button>
-                    <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
+                    <div class="actions-row" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                        <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
+                        <button class="btn btn-secondary" onclick="openLearningPath()">مسار التعلم</button>
+                        <button class="btn btn-secondary" onclick="openMentorCourses()">كورسات المنتور</button>
+                        <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
+                    </div>
                 </div>
             `;
         }

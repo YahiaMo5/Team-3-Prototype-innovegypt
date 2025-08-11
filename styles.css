@@ -1521,3 +1521,22 @@ body {
 
 /* Buttons row in unqualified view */
 #youth-status-section .btn { min-width: 180px; }
+
+.status-section-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+.section-title {
+  margin: 16px 0 8px 0;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 6px;
+}
+.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 12px; font-size: 0.9rem; }
+.chip.neutral { background: #f3f4f6; color: #374151; }
+.chip.danger { background: #ffe5e5; color: #b91c1c; }
+.chip.sky { background: #e6f3ff; color: #1e40af; }
+.chip.gray { background: #eeeeee; color: #374151; }
