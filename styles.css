@@ -1566,6 +1566,9 @@ body {
 .chip.danger { background: var(--chip-danger-bg); color: var(--chip-danger-text); border-color: #fecaca; }
 .chip.sky { background: var(--chip-sky-bg); color: var(--chip-sky-text); border-color: #bae6fd; }
 .chip.gray { background: var(--chip-gray-bg); color: var(--chip-gray-text); border-color: #d1d5db; }
+.chip.success { background: #e7f6ec; color: #0f5132; border-color: #b7e4c7; }
+
+/* Section title accent line uses purple accent already via border-inline-start */
 
 /* Place status section buttons nicely */
 #youth-status-section .actions-row .btn { min-width: 180px; }

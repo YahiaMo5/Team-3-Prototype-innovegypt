@@ -975,52 +975,106 @@ function loadSuggestedVideos(students) {
             ? 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/qualified.png'
             : 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/unqualified.png';
 
+        const jobTitleForSpecialization = (spec) => {
+            switch ((spec || '').trim()) {
+                case 'برمجة': return 'متدرب/مطور برمجيات';
+                case 'تصميم': return 'متدرب/مصمم واجهات مستخدم';
+                case 'تسويق': return 'متدرب/مسوّق رقمي';
+                case 'أعمال': return 'متدرب/تنمية أعمال';
+                default: return 'متدرب';
+            }
+        };
+
         if (isQualified) {
             const jobs = currentUser.jobOpportunities || [];
             const selectedCompany = currentUser.selectedCompany || '';
             const appAt = currentUser.applicationSubmittedAt || '';
             const salaryText = currentUser.salary || 'حسب الشركة';
+
+            const chip = (text, cls = 'neutral') => `<span class="chip ${cls}">${text}</span>`;
+            const jobTitle = selectedCompany ? jobTitleForSpecialization(currentUser.specialization) : '—';
+
             section.innerHTML = `
-                <h2>حالة المؤهل</h2>
-                <div class="qualified-banner">
-                    <p>
-                        <span class="status-badge qualified">مؤهل</span>
-                        أنت مؤهل للتوظيف/التدريب. اختر الشركة التي تفضلها، وسيقوم مسؤولو المنصة بترشيحك لها.
-                    </p>
-                    ${jobs.length ? `
-                    <div class="jobs-choice">
-                        <label>اختر الشركة المفضلة:</label>
-                        <div class="jobs-list">
-                            ${jobs.map((j) => `
-                                <label class="job-option">
-                                    <input type="radio" name="job-choice" value="${j}" ${selectedCompany === j ? 'checked' : ''} ${appAt ? 'disabled' : ''}>
-                                    <i class="fas fa-building"></i> ${j}
-                                </label>
-                            `).join('')}
+                <div class="status-section-card">
+                    <h3 class="section-title">حالتك: مؤهل للتوظيف/ التدريب</h3>
+
+                    <h3 class="section-title">معلومات الأساسية</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`الاسم: ${currentUser.name}`, 'neutral')}
+                        ${chip(`العمر: ${currentUser.age}`, 'neutral')}
+                        ${chip(`التخصص: ${currentUser.specialization}`, 'neutral')}
+                        ${chip(`المستوى: ${currentUser.level}`, 'neutral')}
+                        ${chip(`الخبرة: ${currentUser.experience}`, 'neutral')}
+                    </div>
+
+                    <h3 class="section-title">معلومات التوظيف</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`الوظيفة المرشحة: ${jobTitle}`, 'neutral')}
+                        ${chip(`الراتب المعروض: ${selectedCompany ? salaryText : '—'}`, 'neutral')}
+                        ${chip(`الهدف: ${currentUser.goals || 'غير محدد'}`, 'neutral')}
+                    </div>
+
+                    <div id="jobs-chooser" class="qualified-banner" style="margin-top:8px;">
+                        <div class="jobs-choice">
+                            <label>تحديد الشركات:</label>
+                            ${jobs.length ? `
+                            <div class="jobs-list">
+                                ${jobs.map((j) => `
+                                    <label class="job-option">
+                                        <input type="radio" name="job-choice" value="${j}" ${selectedCompany === j ? 'checked' : ''} ${appAt ? 'disabled' : ''}>
+                                        <i class="fas fa-building"></i> ${j}
+                                    </label>
+                                `).join('')}
+                            </div>
+                            <div class="modal-actions">
+                                <button class="btn btn-primary" ${appAt ? 'disabled' : ''} onclick="chooseCompany(${currentUser.id}, document.querySelector('input[name=job-choice]:checked')?.value)">حفظ الاختيار</button>
+                                ${selectedCompany ? `<span class="selected-company-info">الشركة المختارة: <strong>${selectedCompany}</strong></span>` : ''}
+                            </div>
+                            ` : '<p>لا توجد شركات مرشحة حاليًا.</p>'}
+                            <div class="application-actions">
+                                ${selectedCompany && !appAt ? `<button class="btn btn-secondary" onclick="submitApplication(${currentUser.id})"><i class="fas fa-paper-plane"></i> تقديم الآن</button>` : ''}
+                                ${appAt ? `<span class="application-status"><i class="fas fa-check"></i> تم التقديم لـ <strong>${selectedCompany}</strong> بتاريخ ${new Date(appAt).toLocaleDateString('ar-EG')}</span>` : ''}
+                            </div>
                         </div>
-                        <div class="modal-actions">
-                            <button class="btn btn-primary" ${appAt ? 'disabled' : ''} onclick="chooseCompany(${currentUser.id}, document.querySelector('input[name=job-choice]:checked')?.value)">حفظ الاختيار</button>
-                            ${selectedCompany ? `<span class="selected-company-info">الشركة المختارة حاليًا: <strong>${selectedCompany}</strong></span>` : ''}
+                    </div>
+
+                    <h3 class="section-title">الانجازات</h3>
+                    <div class="chip-list">
+                        ${(Array.isArray(currentUser.achievements) && currentUser.achievements.length)
+                            ? currentUser.achievements.map(a => chip(a, 'success')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
+                    </div>
+
+                    <h3 class="section-title">المهارات القوية</h3>
+                    <div class="chip-list">
+                        ${(Array.isArray(currentUser.strengths) && currentUser.strengths.length)
+                            ? currentUser.strengths.map(s => chip(s, 'sky')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
+                    </div>
+
+                    <h3 class="section-title">مجالات التحسين</h3>
+                    <div class="chip-list">
+                        ${(Array.isArray(currentUser.needsImprovement) && currentUser.needsImprovement.length)
+                            ? currentUser.needsImprovement.map(n => chip(n, 'gray')).join('')
+                            : '<span class="chip neutral">غير متاح</span>'}
+                    </div>
+
+                    <div class="actions-row" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                        <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
+                        <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('jobs-chooser')?.scrollIntoView({behavior:'smooth', block:'center'})">تحديد الشركات</button>
+                    </div>
+
+                    <div class="design-ref-container" style="margin-top:12px;">
+                        <div class="design-ref-actions">
+                            <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
+                        </div>
+                        <div id="design-ref" style="display:none; margin-top:10px;">
+                            <img src="${getDesignImageUrl()}" alt="Design reference"/>
                         </div>
                     </div>
-                    ` : '<p>لا توجد شركات مرشحة حاليًا.</p>'}
-                    <div class="application-actions">
-                        ${selectedCompany && !appAt ? `<button class="btn btn-secondary" onclick="submitApplication(${currentUser.id})"><i class=\"fas fa-paper-plane\"></i> تقديم الآن</button>` : ''}
-                        ${appAt ? `<span class="application-status"><i class=\"fas fa-check\"></i> تم التقديم لـ <strong>${selectedCompany}</strong> بتاريخ ${new Date(appAt).toLocaleDateString('ar-EG')}</span>` : ''}
-                    </div>
-                    <div class="qualified-salary" style="margin-top:8px;">
-                        ${selectedCompany ? `<p><strong>الراتب المتوقع لدى ${selectedCompany}:</strong> ${salaryText}</p>` : '<p>سيظهر الراتب المتوقع بعد اختيار الشركة.</p>'}
-                    </div>
-                    <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>
-                <div class="design-ref-container">
-                    <div class="design-ref-actions">
-                        <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
-                    </div>
-                    <div id="design-ref" style="display:none; margin-top:10px;">
-                        <img src="${getDesignImageUrl()}" alt="Design reference"/>
-                    </div>
-                </div>`;
+            `;
         } else {
             // Unqualified detailed layout (single card with sections)
             const suggestions = getSuggestionsForStudent(currentUser.id || -1);
@@ -1065,40 +1119,20 @@ function loadSuggestedVideos(students) {
                             : '<span class="chip neutral">غير متاح</span>'}
                     </div>
 
-                    <h3 class="section-title">معلومات المينتور المتابع</h3>
-                    <div class="chip-list neutral">
-                        ${chip(`المينتور: ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}`, 'neutral')}
-                        ${chip(`آخر تواصل: ${currentUser.lastContact || 'غير متاح'}`, 'neutral')}
-                        ${chip(`تقييم الشاب: ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}`, 'neutral')}
-                    </div>
-
-                    <h4 class="section-title" style="border-bottom: none;">اقتراحات المينتور</h4>
-                    ${suggestions.length ? `
-                        <div class="videos-grid">
-                            ${suggestions.map(s => `
-                                <div class=\"video-suggestion-card\">
-                                    <div class=\"video-info\">
-                                        <h4>${s.title}</h4>
-                                        <a href=\"${s.url}\" target=\"_blank\" class=\"btn btn-secondary\"><i class=\"fab fa-youtube\"></i> مشاهدة</a>
-                                        <span class=\"suggestion-date\">${new Date(s.date).toLocaleDateString('ar-EG')}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>` : '<p>لا توجد اقتراحات بعد.</p>'}
-
                     <div class="actions-row" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
                         <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
                         <button class="btn btn-secondary" onclick="openLearningPath()">مسار التعلم</button>
                         <button class="btn btn-secondary" onclick="openMentorCourses()">كورسات المنتور</button>
                         <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
                     </div>
-                </div>
-                <div class="design-ref-container" style="margin-top:12px;">
-                    <div class="design-ref-actions">
-                        <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
-                    </div>
-                    <div id="design-ref" style="display:none; margin-top:10px;">
-                        <img src="${getDesignImageUrl()}" alt="Design reference"/>
+
+                    <div class="design-ref-container" style="margin-top:12px;">
+                        <div class="design-ref-actions">
+                            <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
+                        </div>
+                        <div id="design-ref" style="display:none; margin-top:10px;">
+                            <img src="${getDesignImageUrl()}" alt="Design reference"/>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1168,8 +1202,8 @@ function loadSuggestedVideos(students) {
                 <span class="status-badge ${isQualified ? 'qualified' : 'unqualified'}">
                     ${isQualified ? 'مؤهل' : 'تحت التطوير'}
                 </span>
-                ${isQualified && selectedCompany ? `<span class="selected-company"><i class=\"fas fa-briefcase\"></i> الشركة المختارة: ${selectedCompany}</span>` : ''}
-                ${isQualified && appAt ? `<span class="application-status"><i class=\"fas fa-paper-plane\"></i> تم التقديم بتاريخ: ${appAt}</span>` : ''}
+                ${isQualified && selectedCompany ? `<span class="selected-company"><i class="fas fa-briefcase"></i> الشركة المختارة: ${selectedCompany}</span>` : ''}
+                ${isQualified && appAt ? `<span class="application-status"><i class="fas fa-paper-plane"></i> تم التقديم بتاريخ: ${appAt}</span>` : ''}
             `;
         }
     };
@@ -1266,7 +1300,7 @@ function loadSuggestedVideos(students) {
             <div class="modal-content">
                 <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
                 <h3>كورسات المينتور</h3>
-                ${list.length ? list.map(c => `<div class=\"course-card\"><h4>${c.title}</h4><a class=\"btn btn-secondary\" target=\"_blank\" href=\"${c.url}\"><i class=\"fab fa-youtube\"></i> مشاهدة</a></div>`).join('') : '<p>لا توجد كورسات متاحة.</p>'}
+                ${list.length ? list.map(c => `<div class="course-card"><h4>${c.title}</h4><a class="btn btn-secondary" target="_blank" href="${c.url}"><i class="fab fa-youtube"></i> مشاهدة</a></div>`).join('') : '<p>لا توجد كورسات متاحة.</p>'}
             </div>
         `;
         document.body.appendChild(modal);
