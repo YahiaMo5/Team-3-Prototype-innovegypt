@@ -959,3 +959,18 @@ function loadSuggestedVideos(students) {
     };
 })();
 // ===== End added stubs =====
+
+// Ensure global function bindings exist for unqualified calls
+function loadAssignedMentor() { if (window.loadAssignedMentor) return window.loadAssignedMentor.apply(this, arguments); }
+function loadRecommendedCourses() { if (window.loadRecommendedCourses) return window.loadRecommendedCourses.apply(this, arguments); }
+function loadYouthStatus() { if (window.loadYouthStatus) return window.loadYouthStatus.apply(this, arguments); }
+function loadMentorsData() { if (window.loadMentorsData) return window.loadMentorsData.apply(this, arguments); }
+function loadCoursesData() { if (window.loadCoursesData) return window.loadCoursesData.apply(this, arguments); }
+function loadProfileData() { if (window.loadProfileData) return window.loadProfileData.apply(this, arguments); }
+function loadPointsData() { if (window.loadPointsData) return window.loadPointsData.apply(this, arguments); }
+function loadMentorCourses() { if (window.loadMentorCourses) return window.loadMentorCourses.apply(this, arguments); }
+function loadMentorStats() { if (window.loadMentorStats) return window.loadMentorStats.apply(this, arguments); }
+function openStudentChat() { if (window.openStudentChat) return window.openStudentChat.apply(this, arguments); }
+function viewStudentProgress() { if (window.viewStudentProgress) return window.viewStudentProgress.apply(this, arguments); }
+function editSuggestion() { if (window.editSuggestion) return window.editSuggestion.apply(this, arguments); }
+function generateReport() { if (window.generateReport) return window.generateReport.apply(this, arguments); }
