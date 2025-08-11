@@ -22,6 +22,7 @@ function loadPersistedState() {
                     if (typeof override.mentorId === 'number') youth.mentorId = override.mentorId;
                     if (override.lastContact) youth.lastContact = override.lastContact;
                     if (override.selectedCompany) youth.selectedCompany = override.selectedCompany;
+                    if (override.applicationSubmittedAt) youth.applicationSubmittedAt = override.applicationSubmittedAt;
                 }
             }
         }
@@ -37,7 +38,8 @@ function saveYouthOverrides() {
         assignedMentor: y.assignedMentor,
         mentorId: y.mentorId,
         lastContact: y.lastContact,
-        selectedCompany: y.selectedCompany || null
+        selectedCompany: y.selectedCompany || null,
+        applicationSubmittedAt: y.applicationSubmittedAt || null
     }));
     localStorage.setItem(STORAGE_KEYS.youthOverrides, JSON.stringify(overrides));
 }
@@ -966,6 +968,7 @@ function loadSuggestedVideos(students) {
         if (isQualified) {
             const jobs = currentUser.jobOpportunities || [];
             const selectedCompany = currentUser.selectedCompany || '';
+            const appAt = currentUser.applicationSubmittedAt || '';
             section.innerHTML = `
                 <h2>حالة المؤهل</h2>
                 <div class="qualified-banner">
@@ -977,19 +980,23 @@ function loadSuggestedVideos(students) {
                     <div class="jobs-choice">
                         <label>اختر الشركة المفضلة:</label>
                         <div class="jobs-list">
-                            ${jobs.map((j, idx) => `
+                            ${jobs.map((j) => `
                                 <label class="job-option">
-                                    <input type="radio" name="job-choice" value="${j}" ${selectedCompany === j ? 'checked' : ''}>
+                                    <input type="radio" name="job-choice" value="${j}" ${selectedCompany === j ? 'checked' : ''} ${appAt ? 'disabled' : ''}>
                                     <i class="fas fa-building"></i> ${j}
                                 </label>
                             `).join('')}
                         </div>
                         <div class="modal-actions">
-                            <button class="btn btn-primary" onclick="chooseCompany(${currentUser.id}, document.querySelector('input[name=job-choice]:checked')?.value)">حفظ الاختيار</button>
+                            <button class="btn btn-primary" ${appAt ? 'disabled' : ''} onclick="chooseCompany(${currentUser.id}, document.querySelector('input[name=job-choice]:checked')?.value)">حفظ الاختيار</button>
                             ${selectedCompany ? `<span class="selected-company-info">الشركة المختارة حاليًا: <strong>${selectedCompany}</strong></span>` : ''}
                         </div>
                     </div>
                     ` : '<p>لا توجد شركات مرشحة حاليًا.</p>'}
+                    <div class="application-actions">
+                        ${selectedCompany && !appAt ? `<button class="btn btn-secondary" onclick="submitApplication(${currentUser.id})"><i class=\"fas fa-paper-plane\"></i> تقديم الآن</button>` : ''}
+                        ${appAt ? `<span class="application-status"><i class=\"fas fa-check\"></i> تم التقديم لـ <strong>${selectedCompany}</strong> بتاريخ ${new Date(appAt).toLocaleDateString('ar-EG')}</span>` : ''}
+                    </div>
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>`;
         } else {
@@ -1060,11 +1067,13 @@ function loadSuggestedVideos(students) {
             }
             const isQualified = currentUser.status === 'qualified';
             const selectedCompany = currentUser.selectedCompany || null;
+            const appAt = currentUser.applicationSubmittedAt ? new Date(currentUser.applicationSubmittedAt).toLocaleDateString('ar-EG') : null;
             badge.innerHTML = `
                 <span class="status-badge ${isQualified ? 'qualified' : 'unqualified'}">
                     ${isQualified ? 'مؤهل' : 'تحت التطوير'}
                 </span>
                 ${isQualified && selectedCompany ? `<span class="selected-company"><i class=\"fas fa-briefcase\"></i> الشركة المختارة: ${selectedCompany}</span>` : ''}
+                ${isQualified && appAt ? `<span class="application-status"><i class=\"fas fa-paper-plane\"></i> تم التقديم بتاريخ: ${appAt}</span>` : ''}
             `;
         }
     };
@@ -1200,12 +1209,28 @@ function loadSuggestedVideos(students) {
         if (!company) { alert('اختر شركة أولاً'); return; }
         const youth = mockYouth.find(y => y.id === studentId);
         if (!youth) { alert('لم يتم العثور على الشاب'); return; }
+        if (youth.applicationSubmittedAt) { alert('تم التقديم بالفعل، لا يمكن تغيير الاختيار الآن'); return; }
         youth.selectedCompany = company;
         saveYouthOverrides();
         alert('تم حفظ اختيار الشركة: ' + company);
         // Update views if needed
         if (userType === 'youth' && currentUser && currentUser.id === youth.id) {
             currentUser.selectedCompany = company;
+            loadYouthStatus();
+            loadProfileData();
+        }
+    };
+
+    window.submitApplication = function submitApplication(studentId) {
+        const youth = mockYouth.find(y => y.id === studentId);
+        if (!youth) { alert('لم يتم العثور على الشاب'); return; }
+        if (!youth.selectedCompany) { alert('اختر شركة أولاً قبل التقديم'); return; }
+        if (youth.applicationSubmittedAt) { alert('تم التقديم مسبقًا'); return; }
+        youth.applicationSubmittedAt = new Date().toISOString();
+        saveYouthOverrides();
+        alert('تم إرسال طلب التقديم إلى: ' + youth.selectedCompany);
+        if (userType === 'youth' && currentUser && currentUser.id === youth.id) {
+            currentUser.applicationSubmittedAt = youth.applicationSubmittedAt;
             loadYouthStatus();
             loadProfileData();
         }
