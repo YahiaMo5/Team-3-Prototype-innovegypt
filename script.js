@@ -168,8 +168,8 @@ const mockYouth = [
         recommendedCourses: ["أساسيات البرمجة للمبتدئين", "HTML و CSS من الصفر"],
         jobOpportunities: null,
         needsImprovement: [
-            "مهارات البرمجة الأساسية", 
-            "المنطق البرمجي", 
+            "مهارات البرمجة الأساسية",
+            "المنطق البرمجي",
             "حل المشاكل",
             "أساسيات قواعد البيانات",
             "مهارات التعلم الذاتي",
@@ -204,8 +204,8 @@ const mockYouth = [
         recommendedCourses: ["أساسيات التصميم الجرافيكي", "تعلم Photoshop"],
         jobOpportunities: null,
         needsImprovement: [
-            "أساسيات التصميم", 
-            "استخدام أدوات التصميم", 
+            "أساسيات التصميم",
+            "استخدام أدوات التصميم",
             "الإبداع البصري",
             "مبادئ الألوان والخطوط",
             "التصميم الرقمي",
@@ -322,7 +322,7 @@ function setupEventListeners() {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
-    
+
     const navToggle = document.getElementById('nav-toggle');
     if (navToggle) {
         navToggle.addEventListener('click', toggleMobileMenu);
@@ -350,7 +350,7 @@ function showPage(pageName) {
         page.classList.remove('active');
         page.style.display = 'none';
     });
-    
+
     const selectedPage = document.getElementById(pageName + '-page');
     if (selectedPage) {
         selectedPage.classList.add('active');
@@ -399,7 +399,7 @@ function switchTab(tab) {
     currentTab = tab;
     const tabBtns = document.querySelectorAll('.tab-btn');
     tabBtns.forEach(btn => btn.classList.remove('active'));
-    
+
     const activeBtn = document.querySelector(`[onclick="switchTab('${tab}')"]`);
     if (activeBtn) activeBtn.classList.add('active');
 }
@@ -408,19 +408,19 @@ function handleLogin(event) {
     event.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
+
     if (!email || !password) {
         alert('يرجى إدخال البريد الإلكتروني وكلمة المرور');
         return;
     }
-    
+
     loginUser(email);
 }
 
 function demoLogin() {
     // Show user type selection
     const userType = prompt('اختر نوع المستخدم:\n1 - شباب\n2 - مينتور\n\nاكتب 1 أو 2:');
-    
+
     if (userType === '1') {
         loginAsYouth();
     } else if (userType === '2') {
@@ -471,7 +471,7 @@ function loginAsMentor() {
         courses: 3,
         totalEarnings: 15000
     };
-    
+
     showPage('dashboard');
     updateNavigationForMentor();
     updateUserName();
@@ -519,27 +519,40 @@ function updateUserName() {
 function logout() {
     currentUser = null;
     userType = null;
-    
+
+    // Clear session-scoped data to avoid mixing between accounts
+    try { sessionStorage.clear(); } catch {}
+
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => {
         page.classList.remove('active');
         page.style.display = 'none';
     });
-    
-    document.getElementById('login-page').classList.add('active');
-    document.getElementById('login-page').style.display = 'block';
-    document.getElementById('login-form').reset();
-    
+
+    const loginPage = document.getElementById('login-page');
+    if (loginPage) {
+        loginPage.classList.add('active');
+        loginPage.style.display = 'block';
+    }
+    document.getElementById('login-form')?.reset();
+
     // Reset navigation
     const navMenu = document.getElementById('nav-menu');
-    navMenu.innerHTML = `
-        <a href="#" class="nav-link" onclick="showPage('dashboard')">الرئيسية</a>
-        <a href="#" class="nav-link" onclick="showPage('mentors')">المينتورز</a>
-        <a href="#" class="nav-link" onclick="showPage('courses')">الكورسات</a>
-        <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
-        <a href="#" class="nav-link" onclick="showPage('points')">النقاط والتقييمات</a>
-        <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
-    `;
+    if (navMenu) {
+        navMenu.innerHTML = `
+            <a href="#" class="nav-link" onclick="showPage('dashboard')">الرئيسية</a>
+            <a href="#" class="nav-link" onclick="showPage('mentors')">المينتورز</a>
+            <a href="#" class="nav-link" onclick="showPage('courses')">الكورسات</a>
+            <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
+            <a href="#" class="nav-link" onclick="showPage('points')">النقاط والتقييمات</a>
+            <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
+        `;
+    }
+
+    // Clean injected sections
+    document.getElementById('youth-status-section')?.remove();
+    const mentorsChat = document.getElementById('mentors-chat-container');
+    if (mentorsChat) mentorsChat.innerHTML = '';
 }
 
 // Data Loading
@@ -567,7 +580,7 @@ function loadMentorDashboard() {
             <p>مرحباً بك في لوحة المينتور</p>
         </div>
         <div class="status-section-card">
-            <h3 class="section-title">الطلاب الذين يتم متابعتهم</h3>
+            <h3 class="section-title">الطلاب الذين تتابعهم</h3>
             <div class="students-grid">
                 ${assignedStudents.map(s => `
                     <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
@@ -594,9 +607,9 @@ function showSuggestVideoModal(studentId = null) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = 'suggest-video-modal';
-    
+
     const students = mockYouth.filter(youth => youth.assignedMentor === currentUser.name);
-    
+
     modal.innerHTML = `
         <div class="modal-content">
             <span class="close" onclick="closeSuggestVideoModal()">&times;</span>
@@ -612,27 +625,27 @@ function showSuggestVideoModal(studentId = null) {
                         `).join('')}
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label>عنوان الفيديو:</label>
                     <input type="text" name="title" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label>رابط YouTube:</label>
                     <input type="url" name="url" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label>وصف الفيديو:</label>
                     <textarea name="description" required></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label>المهارات المستهدفة:</label>
                     <input type="text" name="skills" placeholder="مثال: JavaScript, React">
                 </div>
-                
+
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-primary">إرسال الاقتراح</button>
                     <button type="button" class="btn btn-secondary" onclick="closeSuggestVideoModal()">إلغاء</button>
@@ -640,7 +653,7 @@ function showSuggestVideoModal(studentId = null) {
             </form>
         </div>
     `;
-    
+
     document.body.appendChild(modal);
     modal.style.display = 'block';
 }
@@ -656,7 +669,7 @@ function submitVideoSuggestion(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    
+
     const rawStudentId = formData.get('studentId');
     const suggestion = {
         studentId: rawStudentId ? parseInt(rawStudentId) : (Array.isArray(mockYouth) ? mockYouth.find(y => y.assignedMentor === (currentUser?.name || ''))?.id : null),
@@ -706,11 +719,11 @@ function loadSuggestedVideos(students) {
             status: "accepted"
         }
     ];
-    
+
     return suggestions.map(suggestion => {
         const student = students.find(s => s.id === suggestion.studentId);
         if (!student) return '';
-        
+
         return `
             <div class="video-suggestion-card ${suggestion.status}">
                 <div class="video-info">
@@ -806,7 +819,7 @@ function loadSuggestedVideos(students) {
         section.className = 'recommendations';
 
         const isQualified = currentUser.status === 'qualified';
-        const getDesignImageUrl = () => isQualified 
+        const getDesignImageUrl = () => isQualified
             ? 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/qualified.png'
             : 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/unqualified.png';
 
@@ -1275,8 +1288,11 @@ function generateReport() { if (window.generateReport) return window.generateRep
 function renderYouthMentorChat() {
     const container = document.getElementById('mentors-chat-container');
     if (!container) return;
+    const header = container.querySelector('.page-header h1') || document.querySelector('#mentors-page .page-header h1');
+    if (header) header.textContent = 'المينتور';
     const mentor = mockMentors[0];
     container.innerHTML = `
+        <div class="page-header"><h1>المينتور</h1></div>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar"><i class="fas fa-user-tie"></i></div>
@@ -1367,7 +1383,7 @@ function renderMentorStudentsCards() {
     if (!container) return;
     const students = mockYouth.filter(y => y.assignedMentor === mockMentors[0].name);
     container.innerHTML = `
-        <div class="page-header"><h1>الطلاب الذين يتم متابعتهم</h1></div>
+        <div class="page-header"><h1>الطلاب الذين تتابعهم</h1></div>
         <div class="students-grid">
             ${students.map(s => `
                 <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
@@ -1393,6 +1409,7 @@ function openMentorChat(studentId) {
     const s = mockYouth.find(x => x.id === studentId);
     if (!s) return;
     container.innerHTML = `
+        <div class="page-header"><h1>محادثة: ${s.name}</h1></div>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar"><i class="fas fa-user-graduate"></i></div>
