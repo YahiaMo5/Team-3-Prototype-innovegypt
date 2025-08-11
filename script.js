@@ -21,6 +21,7 @@ function loadPersistedState() {
                     if (override.assignedMentor) youth.assignedMentor = override.assignedMentor;
                     if (typeof override.mentorId === 'number') youth.mentorId = override.mentorId;
                     if (override.lastContact) youth.lastContact = override.lastContact;
+                    if (override.selectedCompany) youth.selectedCompany = override.selectedCompany;
                 }
             }
         }
@@ -35,7 +36,8 @@ function saveYouthOverrides() {
         status: y.status,
         assignedMentor: y.assignedMentor,
         mentorId: y.mentorId,
-        lastContact: y.lastContact
+        lastContact: y.lastContact,
+        selectedCompany: y.selectedCompany || null
     }));
     localStorage.setItem(STORAGE_KEYS.youthOverrides, JSON.stringify(overrides));
 }
@@ -960,22 +962,42 @@ function loadSuggestedVideos(students) {
         section.id = 'youth-status-section';
         section.className = 'recommendations';
 
-        if (currentUser.status === 'qualified') {
+        const isQualified = currentUser.status === 'qualified';
+        if (isQualified) {
             const jobs = currentUser.jobOpportunities || [];
+            const selectedCompany = currentUser.selectedCompany || '';
             section.innerHTML = `
-                <h2>أنت مؤهل للتوظيف/التدريب</h2>
+                <h2>حالة المؤهل</h2>
                 <div class="qualified-banner">
-                    <p>تم تصنيفك كمؤهل. سيتم ترشيحك لفرص من شركات مناسبة.</p>
-                    ${jobs.length ? `<ul class="jobs-list">${jobs.map(j => `<li><i class=\"fas fa-briefcase\"></i> ${j}</li>`).join('')}</ul>` : ''}
+                    <p>
+                        <span class="status-badge qualified">مؤهل</span>
+                        أنت مؤهل للتوظيف/التدريب. اختر الشركة التي تفضلها، وسيقوم مسؤولو المنصة بترشيحك لها.
+                    </p>
+                    ${jobs.length ? `
+                    <div class="jobs-choice">
+                        <label>اختر الشركة المفضلة:</label>
+                        <div class="jobs-list">
+                            ${jobs.map((j, idx) => `
+                                <label class="job-option">
+                                    <input type="radio" name="job-choice" value="${j}" ${selectedCompany === j ? 'checked' : ''}>
+                                    <i class="fas fa-building"></i> ${j}
+                                </label>
+                            `).join('')}
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-primary" onclick="chooseCompany(${currentUser.id}, document.querySelector('input[name=job-choice]:checked')?.value)">حفظ الاختيار</button>
+                            ${selectedCompany ? `<span class="selected-company-info">الشركة المختارة حاليًا: <strong>${selectedCompany}</strong></span>` : ''}
+                        </div>
+                    </div>
+                    ` : '<p>لا توجد شركات مرشحة حاليًا.</p>'}
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>`;
         } else {
-            // Unqualified path: show mentor suggestions if exist
             const suggestions = getSuggestionsForStudent(currentUser.id || -1);
             section.innerHTML = `
-                <h2>أنت تحت التطوير</h2>
+                <h2>حالة التطوير</h2>
                 <div class="unqualified-banner">
-                    <p>تم تعيين مينتور لمساعدتك على التطور: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
+                    <p><span class="status-badge unqualified">تحت التطوير</span> تم تعيين مينتور لمساعدتك على التطور: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                     ${suggestions.length ? `
                     <h3>اقتراحات المينتور</h3>
                     <div class="videos-grid">
@@ -1025,6 +1047,25 @@ function loadSuggestedVideos(students) {
         const skillsEl = document.getElementById('user-skills');
         if (skillsEl && Array.isArray(currentUser.skills)) {
             skillsEl.innerHTML = currentUser.skills.map(s => `<span class="skill-tag">${s}</span>`).join('');
+        }
+        // status badge and selected company info
+        const header = document.querySelector('#profile-page .profile-header');
+        if (header) {
+            let badge = header.querySelector('#profile-status');
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.id = 'profile-status';
+                badge.style.marginInlineStart = 'auto';
+                header.appendChild(badge);
+            }
+            const isQualified = currentUser.status === 'qualified';
+            const selectedCompany = currentUser.selectedCompany || null;
+            badge.innerHTML = `
+                <span class="status-badge ${isQualified ? 'qualified' : 'unqualified'}">
+                    ${isQualified ? 'مؤهل' : 'تحت التطوير'}
+                </span>
+                ${isQualified && selectedCompany ? `<span class="selected-company"><i class=\"fas fa-briefcase\"></i> الشركة المختارة: ${selectedCompany}</span>` : ''}
+            `;
         }
     };
 
@@ -1152,6 +1193,22 @@ function loadSuggestedVideos(students) {
             if (active?.id === 'dashboard-page') loadDashboardData();
             if (active?.id === 'mentors-page') loadPageData('mentors');
         });
+    };
+
+    // Allow qualified youth to choose preferred company
+    window.chooseCompany = function chooseCompany(studentId, company) {
+        if (!company) { alert('اختر شركة أولاً'); return; }
+        const youth = mockYouth.find(y => y.id === studentId);
+        if (!youth) { alert('لم يتم العثور على الشاب'); return; }
+        youth.selectedCompany = company;
+        saveYouthOverrides();
+        alert('تم حفظ اختيار الشركة: ' + company);
+        // Update views if needed
+        if (userType === 'youth' && currentUser && currentUser.id === youth.id) {
+            currentUser.selectedCompany = company;
+            loadYouthStatus();
+            loadProfileData();
+        }
     };
 })();
 // ===== End added stubs =====
