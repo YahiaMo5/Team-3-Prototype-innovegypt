@@ -129,8 +129,8 @@ const mockYouth = [
         level: "متوسط",
         experience: "2 سنوات",
         status: "qualified", // مؤهلة للتوظيف/التدريب
-        assignedMentor: "سارة أحمد",
-        mentorId: 2,
+        assignedMentor: "د. أحمد محمد",
+        mentorId: 1,
         points: 980,
         rating: 4.6,
         completedCourses: 8,
@@ -158,8 +158,8 @@ const mockYouth = [
         level: "مبتدئ",
         experience: "لا توجد",
         status: "unqualified", // غير مؤهل - يحتاج تطوير
-        assignedMentor: "محمد علي",
-        mentorId: 3,
+        assignedMentor: "د. أحمد محمد",
+        mentorId: 1,
         points: 150,
         rating: 3.5,
         completedCourses: 2,
@@ -701,7 +701,7 @@ function loadMentorDashboard() {
             <h3 class="section-title">الطلاب الذين تتابعهم</h3>
             <div class="students-grid">
                 ${assignedStudents.map(s => `
-                    <div class="student-card" style="cursor:pointer;" onclick="showPage('mentors'); setTimeout(() => openMentorChat(${s.id}), 100);">
+                    <div class="student-card" style="cursor:pointer;" onclick="showPage('mentors'); setTimeout(() => openStudentChat(${s.id}), 100);">
                         <div class="student-header">
                             <div class="student-info">
                                 <h4>${s.name}</h4>
@@ -1121,12 +1121,13 @@ function loadSuggestedVideos(students) {
 
     // Mentors listing page (youth view)
     window.loadMentorsData = function loadMentorsData() {
-        const container = document.getElementById('all-mentors');
-        if (!container) return;
-        const spec = document.getElementById('specialization-filter')?.value || '';
-        const lvl = document.getElementById('level-filter')?.value || '';
-        const list = mockMentors.filter(m => (!spec || m.specialization === spec) && (!lvl || m.level === lvl));
-        container.innerHTML = list.map(renderMentorCard).join('');
+        if (userType === 'youth') {
+            // للشباب: عرض الشات مع المنتور المعين
+            renderYouthMentorChat();
+        } else {
+            // للمنتورين: عرض قائمة الطلاب
+            renderMentorStudentsCards();
+        }
     };
 
     // Courses listing page (youth view)
@@ -1210,7 +1211,106 @@ function loadSuggestedVideos(students) {
             youth.lastContact = new Date().toISOString().slice(0,10);
             saveYouthOverrides();
         }
-        alert('فتح محادثة مع الطالب #' + studentId);
+        
+        // إخفاء قسم الطلاب
+        const studentsContainer = document.getElementById('mentors-students-container');
+        if (studentsContainer) studentsContainer.style.display = 'none';
+        
+        // إظهار الشات مع الطالب
+        const chatContainer = document.getElementById('mentors-chat-container');
+        if (!chatContainer) return;
+        
+        chatContainer.style.display = 'block';
+        chatContainer.innerHTML = `
+            <div class="page-header">
+                <h1>الشات مع: ${youth ? youth.name : 'الطالب'}</h1>
+                <button class="btn btn-secondary" onclick="backToStudentsList()">
+                    <i class="fas fa-arrow-right"></i> العودة لقائمة الطلاب
+                </button>
+            </div>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="avatar"><i class="fas fa-user-graduate"></i></div>
+                    <div class="user-info">
+                        <h3>${youth ? youth.name : 'الطالب'}</h3>
+                        <p>${youth ? youth.specialization + ' - ' + youth.level : ''}</p>
+                        <span class="student-status ${youth ? youth.status : 'unqualified'}">
+                            ${youth && youth.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}
+                        </span>
+                    </div>
+                    <div class="status">متصل الآن</div>
+                </div>
+                <div class="chat-messages" id="chat-messages-${studentId}"></div>
+                <div class="chat-input">
+                    <input type="text" id="message-input-${studentId}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${studentId})}">
+                    <button onclick="sendChatMessage(${studentId})"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>`;
+        
+        loadPersistedChat(studentId);
+    };
+    
+    // العودة لقائمة الطلاب
+    window.backToStudentsList = function backToStudentsList() {
+        renderMentorStudentsCards();
+    };
+    
+    // طلب تعيين مينتور
+    window.requestMentorAssignment = function requestMentorAssignment() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                <h3>طلب تعيين مينتور</h3>
+                <p>سيتم مراجعة طلبك وتعين مينتور مناسب لك في أقرب وقت ممكن.</p>
+                <div class="form-group">
+                    <label>التخصص المفضل:</label>
+                    <select id="preferred-specialization">
+                        <option value="برمجة">برمجة</option>
+                        <option value="تصميم">تصميم</option>
+                        <option value="تسويق">تسويق</option>
+                        <option value="أعمال">أعمال</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات إضافية:</label>
+                    <textarea id="mentor-notes" placeholder="اكتب أي متطلبات خاصة أو ملاحظات..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="submitMentorRequest()">إرسال الطلب</button>
+                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">إلغاء</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    };
+    
+    // إرسال طلب تعيين مينتور
+    window.submitMentorRequest = function submitMentorRequest() {
+        const specialization = document.getElementById('preferred-specialization').value;
+        const notes = document.getElementById('mentor-notes').value;
+        
+        // حفظ الطلب
+        const request = {
+            userId: currentUser.id,
+            userName: currentUser.name,
+            specialization: specialization,
+            notes: notes,
+            date: new Date().toISOString(),
+            status: 'pending'
+        };
+        
+        // حفظ في التخزين
+        const requests = STORAGE.getJSON('mentor_requests') || [];
+        requests.push(request);
+        STORAGE.setJSON('mentor_requests', requests);
+        
+        alert('تم إرسال طلب تعيين المينتور بنجاح! سيتم التواصل معك قريباً.');
+        
+        // إغلاق النافذة
+        document.querySelector('.modal').remove();
     };
     window.viewStudentProgress = function viewStudentProgress(studentId) {
         alert('عرض التقدم للطالب #' + studentId);
@@ -1404,20 +1504,43 @@ function generateReport() { if (window.generateReport) return window.generateRep
 
 // Mentors page chat rendering
 function renderYouthMentorChat() {
+    // إخفاء قسم المنتورين للمنتورين
+    const mentorView = document.getElementById('mentors-students-container');
+    if (mentorView) mentorView.style.display = 'none';
+    
+    // إظهار قسم الشات للشباب
     const container = document.getElementById('mentors-chat-container');
     if (!container) return;
+    container.style.display = 'block';
     
-    // Find the mentor assigned to current user
-    const assignedMentor = mockMentors.find(m => m.name === currentUser.assignedMentor) || mockMentors[0];
+    // Find the mentor assigned to current user - الشباب لهم مينتور واحد فقط
+    const assignedMentor = mockMentors.find(m => m.id === currentUser.mentorId);
+    
+    if (!assignedMentor) {
+        container.innerHTML = `
+            <div class="page-header">
+                <h1>المينتور</h1>
+            </div>
+            <div class="no-mentor-message">
+                <i class="fas fa-user-tie" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>لا يوجد مينتور معين لك حالياً</h3>
+                <p>سيتم تعيين مينتور مناسب لك قريباً</p>
+                <button class="btn btn-primary" onclick="requestMentorAssignment()">طلب تعيين مينتور</button>
+            </div>`;
+        return;
+    }
     
     container.innerHTML = `
-        <div class="page-header"><h1>المينتور</h1></div>
+        <div class="page-header">
+            <h1>المينتور: ${assignedMentor.name}</h1>
+        </div>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar"><i class="fas fa-user-tie"></i></div>
                 <div class="user-info">
                     <h3>${assignedMentor.name}</h3>
                     <p>${assignedMentor.specialization} - ${assignedMentor.experience}</p>
+                    <span class="mentor-rating"><i class="fas fa-star"></i> ${assignedMentor.rating}</span>
                 </div>
                 <div class="status">متصل الآن</div>
             </div>
@@ -1426,36 +1549,27 @@ function renderYouthMentorChat() {
                 <input type="text" id="message-input-youth" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage('youth')}">
                 <button onclick="sendChatMessage('youth')"><i class="fas fa-paper-plane"></i></button>
             </div>
+        </div>
+        <div class="mentor-info-card">
+            <h3>معلومات المينتور</h3>
+            <div class="mentor-details">
+                <p><strong>التخصص:</strong> ${assignedMentor.specialization}</p>
+                <p><strong>المستوى:</strong> ${assignedMentor.level}</p>
+                <p><strong>الخبرة:</strong> ${assignedMentor.experience}</p>
+                <p><strong>عدد الطلاب:</strong> ${assignedMentor.students}</p>
+                <p><strong>التقييم:</strong> ${assignedMentor.rating}/5</p>
+            </div>
+            <div class="mentor-skills">
+                <h4>المهارات:</h4>
+                <div class="skills-tags">
+                    ${(assignedMentor.tags || []).map(tag => `<span class="skill-tag">${tag}</span>`).join('')}
+                </div>
+            </div>
         </div>`;
     loadPersistedChat('youth');
 }
 
-function renderMentorStudentsChat() {
-    const container = document.getElementById('mentors-chat-container');
-    if (!container) return;
-    const students = mockYouth.filter(y => y.assignedMentor === mockMentors[0].name);
-    container.innerHTML = `
-        <div class="students-chat-list">
-            ${students.map(s => `
-                <div class="chat-container" style="margin-bottom:20px;">
-                    <div class="chat-header">
-                        <div class="avatar"><i class="fas fa-user-graduate"></i></div>
-                        <div class="user-info">
-                            <h3>${s.name}</h3>
-                            <p>${s.specialization} - ${s.level}</p>
-                        </div>
-                        <div class="status">متصل الآن</div>
-                    </div>
-                    <div class="chat-messages" id="chat-messages-${s.id}"></div>
-                    <div class="chat-input">
-                        <input type="text" id="message-input-${s.id}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${s.id})}">
-                        <button onclick="sendChatMessage(${s.id})"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            `).join('')}
-        </div>`;
-    students.forEach(s => loadPersistedChat(s.id));
-}
+
 
 function sendChatMessage(target) {
     const isYouthMode = target === 'youth';
@@ -1463,12 +1577,47 @@ function sendChatMessage(target) {
     const msgId = isYouthMode ? 'chat-messages-youth' : `chat-messages-${target}`;
     const input = document.getElementById(inputId);
     const messages = document.getElementById(msgId);
+    
     if (!input || !messages || !input.value.trim()) return;
-    const message = { from: userType, text: input.value, time: new Date().toLocaleTimeString('ar-EG') };
-    messages.insertAdjacentHTML('beforeend', `<div class="message ${userType}"><div class="content">${message.text}</div><span class="time">${message.time}</span></div>`);
-    persistChatMessage(target, message);
+    
+    const messageText = input.value.trim();
+    const currentTime = new Date().toLocaleTimeString('ar-EG');
+    
+    // إنشاء رسالة المستخدم
+    const userMessage = { 
+        from: userType, 
+        text: messageText, 
+        time: currentTime,
+        timestamp: new Date().toISOString()
+    };
+    
+    // عرض رسالة المستخدم
+    messages.insertAdjacentHTML('beforeend', `
+        <div class="message ${userType}">
+            <div class="content">${messageText}</div>
+            <span class="time">${currentTime}</span>
+        </div>
+    `);
+    
+    // حفظ الرسالة
+    persistChatMessage(target, userMessage);
+    
+    // مسح حقل الإدخال
     input.value = '';
+    
+    // التمرير للأسفل
     messages.scrollTop = messages.scrollHeight;
+    
+    // محاكاة رد المينتور (إذا كان المستخدم شاب)
+    if (isYouthMode && userType === 'youth') {
+        // إظهار مؤشر الكتابة
+        showTypingIndicator(target);
+        
+        setTimeout(() => {
+            hideTypingIndicator(target);
+            simulateMentorResponse(target);
+        }, 1000 + Math.random() * 2000); // رد بعد 1-3 ثواني
+    }
 }
 
 function persistChatMessage(target, message) {
@@ -1478,75 +1627,214 @@ function persistChatMessage(target, message) {
     STORAGE.setJSON(key, list);
 }
 
+// إظهار مؤشر الكتابة
+function showTypingIndicator(target) {
+    const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
+    const messages = document.getElementById(msgId);
+    if (!messages) return;
+    
+    // إزالة مؤشر الكتابة السابق إذا كان موجوداً
+    const existingIndicator = messages.querySelector('.typing-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    // إضافة مؤشر الكتابة
+    messages.insertAdjacentHTML('beforeend', `
+        <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    `);
+    
+    // التمرير للأسفل
+    messages.scrollTop = messages.scrollHeight;
+}
+
+// إخفاء مؤشر الكتابة
+function hideTypingIndicator(target) {
+    const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
+    const messages = document.getElementById(msgId);
+    if (!messages) return;
+    
+    const indicator = messages.querySelector('.typing-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+// محاكاة رد المينتور للشباب
+function simulateMentorResponse(target) {
+    const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
+    const messages = document.getElementById(msgId);
+    if (!messages) return;
+    
+    // رسائل نموذجية للمينتور
+    const mentorResponses = [
+        "ممتاز! هذا سؤال جيد جداً",
+        "أرى أنك تتقدم بشكل رائع",
+        "دعني أوضح لك هذا الأمر",
+        "هذا مثال ممتاز على ما تعلمته",
+        "أعتقد أنك جاهز للخطوة التالية",
+        "هذا السؤال يظهر فهمك العميق للموضوع",
+        "أحسنت! استمر في التعلم",
+        "دعني أقترح عليك بعض المصادر الإضافية",
+        "أرى أنك تطور مهاراتك بشكل ممتاز",
+        "هذا سؤال متقدم، أعتقد أنك جاهز له"
+    ];
+    
+    // اختيار رد عشوائي
+    const randomResponse = mentorResponses[Math.floor(Math.random() * mentorResponses.length)];
+    const currentTime = new Date().toLocaleTimeString('ar-EG');
+    
+    // إنشاء رسالة المينتور
+    const mentorMessage = {
+        from: 'mentor',
+        text: randomResponse,
+        time: currentTime,
+        timestamp: new Date().toISOString()
+    };
+    
+    // عرض رسالة المينتور
+    messages.insertAdjacentHTML('beforeend', `
+        <div class="message mentor">
+            <div class="content">${randomResponse}</div>
+            <span class="time">${currentTime}</span>
+        </div>
+    `);
+    
+    // حفظ رسالة المينتور
+    persistChatMessage(target, mentorMessage);
+    
+    // التمرير للأسفل
+    messages.scrollTop = messages.scrollHeight;
+}
+
 function loadPersistedChat(target) {
     const key = `chat_${target}`;
     const list = (() => { try { return STORAGE.getJSON(key) || []; } catch { return []; } })();
     const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
     const messages = document.getElementById(msgId);
     if (!messages) return;
-    list.forEach(m => messages.insertAdjacentHTML('beforeend', `<div class="message ${m.from}"><div class="content">${m.text}</div><span class="time">${m.time}</span></div>`));
+    
+    // مسح الرسائل السابقة
+    messages.innerHTML = '';
+    
+    // عرض الرسائل المحفوظة
+    list.forEach(m => {
+        const messageClass = m.from === 'youth' ? 'youth' : 'mentor';
+        messages.insertAdjacentHTML('beforeend', `
+            <div class="message ${messageClass}">
+                <div class="content">${m.text}</div>
+                <span class="time">${m.time}</span>
+            </div>
+        `);
+    });
+    
+    // التمرير للأسفل
     messages.scrollTop = messages.scrollHeight;
+    
+    // إضافة رسالة ترحيب إذا لم تكن هناك رسائل
+    if (list.length === 0) {
+        setTimeout(() => {
+            let welcomeMessage;
+            
+            if (target === 'youth') {
+                // رسالة ترحيب للشباب من المنتور
+                welcomeMessage = {
+                    from: 'mentor',
+                    text: 'مرحباً! أنا مينتورك، كيف يمكنني مساعدتك اليوم؟',
+                    time: new Date().toLocaleTimeString('ar-EG'),
+                    timestamp: new Date().toISOString()
+                };
+            } else {
+                // رسالة ترحيب للمنتور من الطالب
+                const student = mockYouth.find(s => s.id == target);
+                if (student) {
+                    welcomeMessage = {
+                        from: 'youth',
+                        text: `مرحباً! أنا ${student.name}، سعيد بلقائك!`,
+                        time: new Date().toLocaleTimeString('ar-EG'),
+                        timestamp: new Date().toISOString()
+                    };
+                }
+            }
+            
+            if (welcomeMessage) {
+                messages.insertAdjacentHTML('beforeend', `
+                    <div class="message ${welcomeMessage.from}">
+                        <div class="content">${welcomeMessage.text}</div>
+                        <span class="time">${welcomeMessage.time}</span>
+                    </div>
+                `);
+                
+                persistChatMessage(target, welcomeMessage);
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }, 500);
+    }
 }
 
 // Override mentors page loader
 function loadMentorsData() {
     if (userType === 'youth') {
+        // للشباب: عرض الشات مع المنتور المعين
         renderYouthMentorChat();
     } else {
+        // للمنتورين: عرض قائمة الطلاب
         renderMentorStudentsCards();
     }
 }
 
 function renderMentorStudentsCards() {
-    const container = document.getElementById('mentors-chat-container');
+    // إخفاء قسم الشات للشباب
+    const youthView = document.getElementById('mentors-chat-container');
+    if (youthView) youthView.style.display = 'none';
+    
+    // إظهار قسم الطلاب للمنتورين
+    const container = document.getElementById('mentors-students-container');
     if (!container) return;
-    const students = mockYouth.filter(y => y.assignedMentor === currentUser.name);
-    container.innerHTML = `
-        <div class="page-header"><h1>الطلاب الذين تتابعهم</h1></div>
+    container.style.display = 'block';
+    
+    const studentsList = document.getElementById('mentors-students-list');
+    if (!studentsList) return;
+    
+    // البحث عن الطلاب المعينين لهذا المنتور
+    const students = mockYouth.filter(y => y.mentorId === currentUser.id);
+    
+    if (students.length === 0) {
+        studentsList.innerHTML = `
+            <div class="no-students-message">
+                <i class="fas fa-users" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>لا يوجد طلاب معينين لك حالياً</h3>
+                <p>سيتم تعيين طلاب لك قريباً</p>
+            </div>`;
+        return;
+    }
+    
+    studentsList.innerHTML = `
         <div class="students-grid">
-            ${students.map(s => `
-                <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
+            ${students.map(student => `
+                <div class="student-card">
                     <div class="student-header">
+                        <div class="student-avatar"><i class="fas fa-user-graduate"></i></div>
                         <div class="student-info">
-                            <h4>${s.name}</h4>
-                            <span class="student-level">${s.specialization} - ${s.level}</span>
-                            <span class="status-badge ${s.status}">${s.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}</span>
-                        </div>
-                        <div class="student-stats">
-                            <span><i class="fas fa-star"></i> ${s.points} نقطة</span>
-                            <span><i class="fas fa-book"></i> ${s.completedCourses} كورس</span>
+                            <h3>${student.name}</h3>
+                            <p>${student.specialization} - ${student.level}</p>
+                            <span class="student-status ${student.status}">${student.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}</span>
                         </div>
                     </div>
-                    <div class="student-skills">${(s.skills||[]).map(k=>`<span class="skill-tag">${k}</span>`).join('')}</div>
+                    <div class="student-actions">
+                        <button class="btn btn-primary" onclick="openStudentChat(${student.id})">
+                            <i class="fas fa-comments"></i> فتح الشات
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewStudentProgress(${student.id})">
+                            <i class="fas fa-chart-line"></i> التقدم
+                        </button>
+                    </div>
                 </div>
             `).join('')}
         </div>`;
 }
 
-function openMentorChat(studentId) {
-    const container = document.getElementById('mentors-chat-container');
-    if (!container) return;
-    const s = mockYouth.find(x => x.id === studentId);
-    if (!s) return;
-    container.innerHTML = `
-        <div class="page-header">
-            <h1>محادثة: ${s.name}</h1>
-            <button class="btn btn-secondary" onclick="loadMentorsData()" style="margin-top: 10px;">رجوع إلى قائمة الطلاب</button>
-        </div>
-        <div class="chat-container">
-            <div class="chat-header">
-                <div class="avatar"><i class="fas fa-user-graduate"></i></div>
-                <div class="user-info">
-                    <h3>${s.name}</h3>
-                    <p>${s.specialization} - ${s.level}</p>
-                </div>
-                <div class="status">متصل الآن</div>
-            </div>
-            <div class="chat-messages" id="chat-messages-${s.id}"></div>
-            <div class="chat-input">
-                <input type="text" id="message-input-${s.id}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${s.id})}">
-                <button onclick="sendChatMessage(${s.id})"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>`;
-    loadPersistedChat(s.id);
-}
