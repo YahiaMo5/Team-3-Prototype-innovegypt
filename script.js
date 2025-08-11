@@ -4,12 +4,135 @@ let currentTab = 'youth';
 let userType = null; // 'youth' or 'mentor'
 
 // Default demo data for when not logged in
-const defaultUser = {
+let defaultUser = {
     id: 1,
     name: "أحمد محمد",
     email: "ahmed@example.com",
-    assignedMentor: "د. أحمد محمد"
+    assignedMentor: "د. أحمد محمد",
+    status: "qualified"
 };
+
+// Function to switch between qualified and unqualified demo user
+function switchDemoUserStatus() {
+    const isCurrentlyQualified = defaultUser.status === 'qualified';
+    if (isCurrentlyQualified) {
+        // Switch to unqualified user
+        defaultUser = {
+            id: 3,
+            name: "محمد خالد",
+            email: "mohamed@example.com",
+            assignedMentor: "محمد علي",
+            status: "unqualified",
+            age: 20,
+            qualification: "ثانوية عامة",
+            specialization: "برمجة",
+            level: "مبتدئ",
+            experience: "لا توجد",
+            points: 150,
+            rating: 3.5,
+            completedCourses: 2,
+            skills: ["HTML", "CSS"],
+            needsImprovement: ["JavaScript", "المشاريع العملية", "حل المشاكل"]
+        };
+    } else {
+        // Switch to qualified user
+        defaultUser = {
+            id: 1,
+            name: "أحمد محمد",
+            email: "ahmed@example.com",
+            assignedMentor: "د. أحمد محمد",
+            status: "qualified",
+            age: 25,
+            qualification: "بكالوريوس هندسة برمجيات",
+            specialization: "برمجة",
+            level: "متوسط",
+            experience: "3 سنوات",
+            points: 1250,
+            rating: 4.8,
+            completedCourses: 12,
+            skills: ["JavaScript", "React", "HTML", "CSS", "Node.js", "Git"]
+        };
+    }
+}
+
+// Function to switch demo user and refresh display
+function switchDemoUser() {
+    switchDemoUserStatus();
+    
+    // Clear current user if set from demo
+    if (currentUser && !userType) {
+        currentUser = null;
+    }
+    
+    // Clear chat messages to load new ones
+    STORAGE.setJSON('chat_youth', []);
+    
+    // Update display
+    updateUserName();
+    updateDashboardForDemoUser();
+    
+    // Refresh chat if on mentors page
+    const currentPage = document.querySelector('.page.active');
+    if (currentPage && currentPage.id === 'mentors-page') {
+        setTimeout(() => {
+            loadMentorsData();
+            setTimeout(() => {
+                loadPersistedChat('youth');
+            }, 100);
+        }, 100);
+    }
+    
+    // Show notification
+    const statusText = defaultUser.status === 'qualified' ? 'مؤهل' : 'غير مؤهل';
+    alert(`تم التبديل إلى: ${defaultUser.name} (${statusText})`);
+}
+
+// Function to update dashboard for demo user
+function updateDashboardForDemoUser() {
+    const container = document.getElementById('assigned-mentor-card');
+    if (container) {
+        const assignedMentor = mockMentors.find(m => m.name === defaultUser.assignedMentor);
+        if (assignedMentor) {
+            container.innerHTML = `
+                <div class="mentor-card assigned-mentor" onclick="showPage('mentors')">
+                    <div class="mentor-header">
+                        <div class="mentor-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="mentor-info">
+                            <h3>${assignedMentor.name}</h3>
+                            <p class="mentor-specialization">${assignedMentor.specialization}</p>
+                            <p class="mentor-experience">${assignedMentor.experience}</p>
+                        </div>
+                        <div class="mentor-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${assignedMentor.rating}</span>
+                        </div>
+                    </div>
+                    <div class="mentor-description">
+                        <p>${assignedMentor.description}</p>
+                    </div>
+                    <div class="mentor-tags">
+                        ${assignedMentor.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="mentor-actions">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); showPage('mentors')">
+                            <i class="fas fa-comments"></i> بدء محادثة
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Update stats based on user status
+    const statsCards = document.querySelectorAll('.stat-card h3');
+    if (statsCards.length >= 4) {
+        statsCards[0].textContent = defaultUser.points || 150; // Points
+        statsCards[2].textContent = defaultUser.completedCourses || 2; // Completed courses
+        statsCards[3].textContent = defaultUser.rating || 3.5; // Rating
+    }
+}
 
 const STORAGE = {
     get(key) { try { return sessionStorage.getItem(key); } catch { return null; } },
@@ -94,6 +217,25 @@ const mockMentors = [
         courses: [
             { id: 1, title: "مقدمة في تطوير الويب", platform: "YouTube", url: "https://youtube.com/watch?v=example1", duration: "8 أسابيع", level: "مبتدئ", price: "مجاني" },
             { id: 2, title: "React.js المتقدم", platform: "YouTube", url: "https://youtube.com/watch?v=example2", duration: "6 أسابيع", level: "متقدم", price: "مجاني" }
+        ]
+    },
+    {
+        id: 2,
+        name: "محمد علي",
+        specialization: "برمجة",
+        level: "متوسط",
+        rating: 4.5,
+        students: 25,
+        experience: "5 سنوات",
+        description: "مدرب برمجة للمبتدئين مع خبرة في تعليم الأساسيات",
+        tags: ["HTML", "CSS", "JavaScript", "أساسيات البرمجة"],
+        age: 30,
+        qualification: "بكالوريوس علوم حاسوب",
+        expertise: "تعليم أساسيات البرمجة، تطوير مهارات المبتدئين",
+        type: "beginner-friendly",
+        courses: [
+            { id: 3, title: "أساسيات HTML و CSS", platform: "YouTube", url: "https://youtube.com/watch?v=example3", duration: "4 أسابيع", level: "مبتدئ", price: "مجاني" },
+            { id: 4, title: "مقدمة في JavaScript", platform: "YouTube", url: "https://youtube.com/watch?v=example4", duration: "6 أسابيع", level: "مبتدئ", price: "مجاني" }
         ]
     }
 ];
@@ -329,38 +471,78 @@ document.addEventListener('DOMContentLoaded', function() {
         const key = 'chat_youth';
         const existingMessages = (() => { try { return STORAGE.getJSON(key) || []; } catch { return []; } })();
         if (existingMessages.length === 0) {
-            const demoMessages = [
-                {
-                    from: 'mentor',
-                    text: 'مرحباً أحمد! أنا د. أحمد محمد، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟',
-                    time: '2:30 م',
-                    id: Date.now() - 30000
-                },
-                {
-                    from: 'youth',
-                    text: 'مرحباً دكتور! سعيد بالتعرف عليك. أريد تحسين مهاراتي في البرمجة.',
-                    time: '2:32 م',
-                    id: Date.now() - 25000
-                },
-                {
-                    from: 'mentor',
-                    text: 'ممتاز! أنصحك بالبدء بـ JavaScript وتطوير مشاريع عملية. هل لديك خبرة سابقة؟',
-                    time: '2:35 م',
-                    id: Date.now() - 20000
-                },
-                {
-                    from: 'youth',
-                    text: 'نعم، لدي خبرة بسيطة لكن أريد تطوير مهاراتي أكثر.',
-                    time: '2:37 م',
-                    id: Date.now() - 15000
-                },
-                {
-                    from: 'mentor',
-                    text: 'رائع! سأرسل لك خطة دراسية مناسبة وبعض المشاريع العملية.',
-                    time: '2:40 م',
-                    id: Date.now() - 10000
-                }
-            ];
+            // Create different demo messages based on user status
+            let demoMessages;
+            
+            if (defaultUser.status === 'qualified') {
+                demoMessages = [
+                    {
+                        from: 'mentor',
+                        text: 'مرحباً أحمد! أنا د. أحمد محمد، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟',
+                        time: '2:30 م',
+                        id: Date.now() - 30000
+                    },
+                    {
+                        from: 'youth',
+                        text: 'مرحباً دكتور! سعيد بالتعرف عليك. أريد تحسين مهاراتي في البرمجة.',
+                        time: '2:32 م',
+                        id: Date.now() - 25000
+                    },
+                    {
+                        from: 'mentor',
+                        text: 'ممتاز! أنصحك بالبدء بـ JavaScript وتطوير مشاريع عملية. هل لديك خبرة سابقة؟',
+                        time: '2:35 م',
+                        id: Date.now() - 20000
+                    },
+                    {
+                        from: 'youth',
+                        text: 'نعم، لدي خبرة بسيطة لكن أريد تطوير مهاراتي أكثر.',
+                        time: '2:37 م',
+                        id: Date.now() - 15000
+                    },
+                    {
+                        from: 'mentor',
+                        text: 'رائع! سأرسل لك خطة دراسية مناسبة وبعض المشاريع العملية.',
+                        time: '2:40 م',
+                        id: Date.now() - 10000
+                    }
+                ];
+            } else {
+                // Messages for unqualified user
+                demoMessages = [
+                    {
+                        from: 'mentor',
+                        text: 'مرحباً محمد! أنا محمد علي، مينتورك الشخصي. سأساعدك لتطوير مهاراتك من البداية.',
+                        time: '2:30 م',
+                        id: Date.now() - 30000
+                    },
+                    {
+                        from: 'youth',
+                        text: 'مرحباً أستاذ محمد! أنا جديد في البرمجة وأريد تعلم الأساسيات.',
+                        time: '2:32 م',
+                        id: Date.now() - 25000
+                    },
+                    {
+                        from: 'mentor',
+                        text: 'ممتاز! سنبدأ بـ HTML و CSS أولاً. هل لديك أي خبرة سابقة؟',
+                        time: '2:35 م',
+                        id: Date.now() - 20000
+                    },
+                    {
+                        from: 'youth',
+                        text: 'تعلمت بعض HTML بس لسه محتاج أتعلم كتير.',
+                        time: '2:37 م',
+                        id: Date.now() - 15000
+                    },
+                    {
+                        from: 'mentor',
+                        text: 'مش مشكلة! هنبدأ من الأساسيات وهطلعك محترف إن شاء الله.',
+                        time: '2:40 م',
+                        id: Date.now() - 10000
+                    }
+                ];
+            }
+            
             STORAGE.setJSON(key, demoMessages);
         }
         
@@ -410,11 +592,17 @@ function showPage(pageName) {
         // Load demo chat messages for mentors page
         if (pageName === 'mentors') {
             setTimeout(() => {
-                const messagesContainer = document.getElementById('chat-messages-youth');
-                if (messagesContainer) {
-                    loadPersistedChat('youth');
-                }
-            }, 200);
+                // Ensure chat is rendered first
+                loadMentorsData();
+                
+                // Then load persisted messages
+                setTimeout(() => {
+                    const messagesContainer = document.getElementById('chat-messages-youth');
+                    if (messagesContainer) {
+                        loadPersistedChat('youth');
+                    }
+                }, 100);
+            }, 100);
         }
     }
 }
@@ -1520,8 +1708,9 @@ function renderYouthMentorChat() {
     const container = document.getElementById('mentors-chat-container');
     if (!container) return;
     
-    // Find the mentor assigned to current user
-    const assignedMentor = mockMentors.find(m => m.name === currentUser.assignedMentor) || mockMentors[0];
+    // Find the mentor assigned to current user (use default user if not logged in)
+    const user = currentUser || defaultUser;
+    const assignedMentor = mockMentors.find(m => m.name === user.assignedMentor) || mockMentors[0];
     
     container.innerHTML = `
         <div class="page-header"><h1>المينتور</h1></div>
@@ -1548,7 +1737,7 @@ function renderYouthMentorChat() {
         if (messages && messages.children.length === 0) {
             const welcomeMessage = {
                 from: 'mentor',
-                text: `مرحباً ${currentUser.name}! أنا ${assignedMentor.name}، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟`,
+                text: `مرحباً ${user.name}! أنا ${assignedMentor.name}، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟`,
                 time: new Date().toLocaleTimeString('ar-EG'),
                 id: Date.now()
             };
@@ -1711,7 +1900,10 @@ function loadPersistedChat(target) {
 
 // Override mentors page loader
 function loadMentorsData() {
-    if (userType === 'youth') {
+    // Default to youth view if userType is not set (demo mode)
+    const currentUserType = userType || 'youth';
+    
+    if (currentUserType === 'youth') {
         renderYouthMentorChat();
     } else {
         renderMentorStudentsCards();

@@ -245,6 +245,17 @@ body {
     background: #218838;
 }
 
+.demo-btn.secondary {
+    background: #6B7280;
+    color: white;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+.demo-btn.secondary:hover {
+    background: #4B5563;
+}
+
 /* Dashboard */
 .dashboard-header {
     text-align: center;
