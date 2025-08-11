@@ -1504,39 +1504,71 @@ body {
     cursor: not-allowed;
 }
 
-.qualified-banner, .unqualified-banner {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+:root {
+  --card-bg: #ffffff;
+  --card-radius: 16px;
+  --card-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  --chip-radius: 12px;
+  --chip-gap: 10px;
+  --text-neutral: #374151;
+  --chip-neutral-bg: #f3f4f6;
+  --chip-danger-bg: #fee2e2;
+  --chip-danger-text: #b91c1c;
+  --chip-sky-bg: #e0f2fe;
+  --chip-sky-text: #075985;
+  --chip-gray-bg: #e5e7eb;
+  --chip-gray-text: #374151;
 }
 
+/* Buttons: softer rounded */
+.btn { border-radius: 10px; }
+
+/* Qualified/Unqualified banners */
+.qualified-banner, .unqualified-banner {
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+}
+
+/* Jobs choice row */
 .jobs-choice { margin-top: 12px; }
 .jobs-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
-.job-option { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; background: #f7f7f7; border-radius: 10px; }
+.job-option { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f7f7f7; border-radius: var(--chip-radius); border: 1px solid #eee; }
 .selected-company-info { margin-inline-start: 12px; color: #333; }
 .application-actions { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-/* Simple blocks used in unqualified details are inline-styled from JS */
-
-/* Buttons row in unqualified view */
-#youth-status-section .btn { min-width: 180px; }
-
+/* Youth unqualified consolidated card */
 .status-section-card {
-  background: #fff;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--card-radius);
   padding: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: var(--card-shadow);
 }
 .section-title {
-  margin: 16px 0 8px 0;
-  font-size: 1.1rem;
-  border-bottom: 2px solid #eee;
+  margin: 16px 0 10px 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 1px solid #eee;
   padding-bottom: 6px;
+  border-inline-start: 4px solid #667eea;
+  padding-inline-start: 10px;
 }
-.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
-.chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 12px; font-size: 0.9rem; }
-.chip.neutral { background: #f3f4f6; color: #374151; }
-.chip.danger { background: #ffe5e5; color: #b91c1c; }
-.chip.sky { background: #e6f3ff; color: #1e40af; }
-.chip.gray { background: #eeeeee; color: #374151; }
+
+/* Chip sets */
+.chip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--chip-gap); margin-bottom: 8px; }
+.chip {
+  display: inline-flex; align-items: center; padding: 8px 12px; border-radius: var(--chip-radius);
+  font-size: 0.95rem; color: var(--text-neutral); border: 1px solid transparent;
+}
+.chip.neutral { background: var(--chip-neutral-bg); }
+.chip.danger { background: var(--chip-danger-bg); color: var(--chip-danger-text); border-color: #fecaca; }
+.chip.sky { background: var(--chip-sky-bg); color: var(--chip-sky-text); border-color: #bae6fd; }
+.chip.gray { background: var(--chip-gray-bg); color: var(--chip-gray-text); border-color: #d1d5db; }
+
+/* Place status section buttons nicely */
+#youth-status-section .actions-row .btn { min-width: 180px; }
+
+/* Design reference image */
+.design-ref-container img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid #eee; }
