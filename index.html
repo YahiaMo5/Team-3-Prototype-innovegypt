@@ -108,11 +108,21 @@
 
     <!-- Mentors Page -->
     <div id="mentors-page" class="page">
-        <div class="container" id="mentors-chat-container">
-            <div class="page-header">
-                <h1>المينتور</h1>
+        <div class="container">
+            <!-- Youth View: Chat with assigned mentor -->
+            <div id="mentors-chat-container" class="youth-view">
+                <!-- Chat UI will be rendered here by script.js for youth -->
             </div>
-            <!-- Chat UI will be rendered here by script.js for youth/mentor -->
+            
+            <!-- Mentor View: List of students -->
+            <div id="mentors-students-container" class="mentor-view" style="display: none;">
+                <div class="page-header">
+                    <h1>الطلاب المعينين</h1>
+                </div>
+                <div id="mentors-students-list">
+                    <!-- Students list will be loaded here for mentors -->
+                </div>
+            </div>
         </div>
     </div>
 
