@@ -1503,3 +1503,21 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+.qualified-banner, .unqualified-banner {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.jobs-choice { margin-top: 12px; }
+.jobs-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.job-option { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; background: #f7f7f7; border-radius: 10px; }
+.selected-company-info { margin-inline-start: 12px; color: #333; }
+.application-actions { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* Simple blocks used in unqualified details are inline-styled from JS */
+
+/* Buttons row in unqualified view */
+#youth-status-section .btn { min-width: 180px; }
