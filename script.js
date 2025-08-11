@@ -3,6 +3,61 @@ let currentUser = null;
 let currentTab = 'youth';
 let userType = null; // 'youth' or 'mentor'
 
+const STORAGE_KEYS = {
+    youthOverrides: 'youth_overrides',
+    mentorSuggestions: 'mentor_suggestions'
+};
+
+function loadPersistedState() {
+    try {
+        const overridesJson = localStorage.getItem(STORAGE_KEYS.youthOverrides);
+        if (overridesJson) {
+            const overrides = JSON.parse(overridesJson);
+            if (Array.isArray(overrides)) {
+                for (const override of overrides) {
+                    const youth = mockYouth.find(y => y.id === override.id);
+                    if (!youth) continue;
+                    if (override.status) youth.status = override.status;
+                    if (override.assignedMentor) youth.assignedMentor = override.assignedMentor;
+                    if (typeof override.mentorId === 'number') youth.mentorId = override.mentorId;
+                    if (override.lastContact) youth.lastContact = override.lastContact;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load persisted youth overrides:', e);
+    }
+}
+
+function saveYouthOverrides() {
+    const overrides = mockYouth.map(y => ({
+        id: y.id,
+        status: y.status,
+        assignedMentor: y.assignedMentor,
+        mentorId: y.mentorId,
+        lastContact: y.lastContact
+    }));
+    localStorage.setItem(STORAGE_KEYS.youthOverrides, JSON.stringify(overrides));
+}
+
+function getSuggestionsForStudent(studentId) {
+    try {
+        const json = localStorage.getItem(STORAGE_KEYS.mentorSuggestions);
+        const all = json ? JSON.parse(json) : [];
+        return all.filter(s => s.studentId === studentId);
+    } catch {
+        return [];
+    }
+}
+
+function addSuggestionForStudent(suggestion) {
+    const list = (() => {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.mentorSuggestions)) || []; } catch { return []; }
+    })();
+    list.push(suggestion);
+    localStorage.setItem(STORAGE_KEYS.mentorSuggestions, JSON.stringify(list));
+}
+
 // Mock Data
 const mockMentors = [
     {
@@ -351,6 +406,7 @@ const mockCourses = [
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+    loadPersistedState();
     setupEventListeners();
     hideAllPagesExceptLogin();
 });
@@ -526,6 +582,7 @@ function updateNavigationForYouth() {
         <a href="#" class="nav-link" onclick="showPage('courses')">الكورسات</a>
         <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
         <a href="#" class="nav-link" onclick="showPage('points')">النقاط والتقييمات</a>
+        <a href="#" class="nav-link" onclick="openAdminPanel()">إدارة</a>
         <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
     `;
 }
@@ -538,6 +595,7 @@ function updateNavigationForMentor() {
         <a href="#" class="nav-link" onclick="showPage('courses')">كورساتي</a>
         <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
         <a href="#" class="nav-link" onclick="showPage('points')">الإحصائيات</a>
+        <a href="#" class="nav-link" onclick="openAdminPanel()">إدارة</a>
         <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
     `;
 }
@@ -753,20 +811,35 @@ function submitVideoSuggestion(event) {
     const form = event.target;
     const formData = new FormData(form);
     
+    const rawStudentId = formData.get('studentId');
     const suggestion = {
-        studentId: parseInt(formData.get('studentId')),
+        studentId: rawStudentId ? parseInt(rawStudentId) : (Array.isArray(mockYouth) ? mockYouth.find(y => y.assignedMentor === (currentUser?.name || ''))?.id : null),
         title: formData.get('title'),
         url: formData.get('url'),
         description: formData.get('description'),
-        skills: formData.get('skills').split(',').map(skill => skill.trim()),
-        mentorId: currentUser.id,
+        skills: (formData.get('skills') || '').split(',').map(skill => skill.trim()).filter(Boolean),
+        mentorId: currentUser?.id || 0,
         date: new Date().toISOString()
     };
-    
-    // في التطبيق الحقيقي، سيتم حفظ الاقتراح في قاعدة البيانات
-    console.log('تم إرسال اقتراح الفيديو:', suggestion);
-    alert('تم إرسال اقتراح الفيديو بنجاح!');
+
+    addSuggestionForStudent(suggestion);
+    // Update last contact for the student
+    const student = mockYouth.find(y => y.id === suggestion.studentId);
+    if (student) {
+        student.lastContact = new Date().toISOString().slice(0,10);
+        saveYouthOverrides();
+    }
+
+    console.log('تم حفظ اقتراح الفيديو:', suggestion);
+    alert('تم إرسال اقتراح الفيديو وحفظه!');
     closeSuggestVideoModal();
+
+    // If mentor dashboard is visible, refresh
+    if (document.getElementById('mentors-page')?.classList.contains('active') ||
+        document.getElementById('dashboard-page')?.classList.contains('active')) {
+        if (userType === 'mentor') loadMentorDashboard();
+        if (userType === 'youth') loadYouthStatus();
+    }
 }
 
 function loadSuggestedVideos(students) {
@@ -877,8 +950,49 @@ function loadSuggestedVideos(students) {
     };
 
     window.loadYouthStatus = function loadYouthStatus() {
-        // Placeholder for future youth status widgets
-        console.debug('loadYouthStatus: stub');
+        const dashboardPage = document.getElementById('dashboard-page');
+        if (!dashboardPage || !currentUser) return;
+        // Remove previous injected section if exists
+        const old = dashboardPage.querySelector('#youth-status-section');
+        if (old) old.remove();
+
+        const section = document.createElement('div');
+        section.id = 'youth-status-section';
+        section.className = 'recommendations';
+
+        if (currentUser.status === 'qualified') {
+            const jobs = currentUser.jobOpportunities || [];
+            section.innerHTML = `
+                <h2>أنت مؤهل للتوظيف/التدريب</h2>
+                <div class="qualified-banner">
+                    <p>تم تصنيفك كمؤهل. سيتم ترشيحك لفرص من شركات مناسبة.</p>
+                    ${jobs.length ? `<ul class="jobs-list">${jobs.map(j => `<li><i class=\"fas fa-briefcase\"></i> ${j}</li>`).join('')}</ul>` : ''}
+                    <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
+                </div>`;
+        } else {
+            // Unqualified path: show mentor suggestions if exist
+            const suggestions = getSuggestionsForStudent(currentUser.id || -1);
+            section.innerHTML = `
+                <h2>أنت تحت التطوير</h2>
+                <div class="unqualified-banner">
+                    <p>تم تعيين مينتور لمساعدتك على التطور: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
+                    ${suggestions.length ? `
+                    <h3>اقتراحات المينتور</h3>
+                    <div class="videos-grid">
+                        ${suggestions.map(s => `
+                            <div class="video-suggestion-card">
+                                <div class="video-info">
+                                    <h4>${s.title}</h4>
+                                    <a href="${s.url}" target="_blank" class="btn btn-secondary"><i class="fab fa-youtube"></i> مشاهدة</a>
+                                    <span class="suggestion-date">${new Date(s.date).toLocaleDateString('ar-EG')}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>` : '<p>لم يقترح المينتور محتوى بعد. تابع قريبًا.</p>'}
+                </div>`;
+        }
+
+        dashboardPage.querySelector('.container')?.appendChild(section);
     };
 
     // Mentors listing page (youth view)
@@ -946,6 +1060,11 @@ function loadSuggestedVideos(students) {
 
     // Actions and utilities stubs
     window.openStudentChat = function openStudentChat(studentId) {
+        const youth = mockYouth.find(y => y.id === studentId);
+        if (youth) {
+            youth.lastContact = new Date().toISOString().slice(0,10);
+            saveYouthOverrides();
+        }
         alert('فتح محادثة مع الطالب #' + studentId);
     };
     window.viewStudentProgress = function viewStudentProgress(studentId) {
@@ -956,6 +1075,83 @@ function loadSuggestedVideos(students) {
     };
     window.generateReport = function generateReport() {
         alert('تم توليد تقرير مبدئي (Prototype)');
+    };
+
+    // Admin Panel: assign mentor and set status
+    window.openAdminPanel = function openAdminPanel() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'admin-panel-modal';
+
+        const youthRows = mockYouth.map(y => `
+            <tr data-id="${y.id}">
+                <td>${y.name}</td>
+                <td>${y.specialization}</td>
+                <td>
+                    <select class="status-select">
+                        <option value="qualified" ${y.status === 'qualified' ? 'selected' : ''}>Qualified</option>
+                        <option value="unqualified" ${y.status === 'unqualified' ? 'selected' : ''}>Unqualified</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="mentor-select">
+                        ${mockMentors.map(m => `<option value="${m.id}" ${y.mentorId === m.id || y.assignedMentor === m.name ? 'selected' : ''}>${m.name}</option>`).join('')}
+                    </select>
+                </td>
+            </tr>
+        `).join('');
+
+        modal.innerHTML = `
+            <div class="modal-content large">
+                <span class="close" onclick="document.getElementById('admin-panel-modal').remove()">&times;</span>
+                <h3>لوحة إدارة التعيينات والحالة</h3>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>الشاب</th>
+                                <th>التخصص</th>
+                                <th>الحالة</th>
+                                <th>المينتور المعين</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${youthRows}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="admin-save-btn">حفظ</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('admin-panel-modal').remove()">إلغاء</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+
+        modal.querySelector('#admin-save-btn').addEventListener('click', () => {
+            const rows = [...modal.querySelectorAll('tbody tr')];
+            rows.forEach(row => {
+                const id = parseInt(row.getAttribute('data-id'));
+                const status = row.querySelector('.status-select').value;
+                const mentorId = parseInt(row.querySelector('.mentor-select').value);
+                const youth = mockYouth.find(y => y.id === id);
+                const mentor = mockMentors.find(m => m.id === mentorId);
+                if (youth && mentor) {
+                    youth.status = status;
+                    youth.mentorId = mentorId;
+                    youth.assignedMentor = mentor.name;
+                }
+            });
+            saveYouthOverrides();
+            alert('تم حفظ التغييرات');
+            modal.remove();
+            // Refresh current page
+            const active = document.querySelector('.page.active');
+            if (active?.id === 'dashboard-page') loadDashboardData();
+            if (active?.id === 'mentors-page') loadPageData('mentors');
+        });
     };
 })();
 // ===== End added stubs =====
