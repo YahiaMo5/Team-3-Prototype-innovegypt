@@ -586,7 +586,6 @@ function updateNavigationForYouth() {
         <a href="#" class="nav-link" onclick="showPage('courses')">الكورسات</a>
         <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
         <a href="#" class="nav-link" onclick="showPage('points')">النقاط والتقييمات</a>
-        <a href="#" class="nav-link" onclick="openAdminPanel()">إدارة</a>
         <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
     `;
 }
@@ -599,7 +598,6 @@ function updateNavigationForMentor() {
         <a href="#" class="nav-link" onclick="showPage('courses')">كورساتي</a>
         <a href="#" class="nav-link" onclick="showPage('profile')">الملف الشخصي</a>
         <a href="#" class="nav-link" onclick="showPage('points')">الإحصائيات</a>
-        <a href="#" class="nav-link" onclick="openAdminPanel()">إدارة</a>
         <a href="#" class="nav-link" onclick="logout()">تسجيل خروج</a>
     `;
 }
@@ -1000,25 +998,90 @@ function loadSuggestedVideos(students) {
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>`;
         } else {
+            // Unqualified detailed layout
+            const mentor = mockMentors.find(m => m.name === (currentUser.assignedMentor || '')) || null;
             const suggestions = getSuggestionsForStudent(currentUser.id || -1);
+            const blockStyle = (bg) => `background:${bg}; padding:16px; border-radius:12px; margin-top:14px;`;
+            const titleStyle = 'margin:0 0 8px 0;';
+
             section.innerHTML = `
-                <h2>حالة التطوير</h2>
-                <div class="unqualified-banner">
-                    <p><span class="status-badge unqualified">تحت التطوير</span> تم تعيين مينتور لمساعدتك على التطور: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
-                    ${suggestions.length ? `
-                    <h3>اقتراحات المينتور</h3>
-                    <div class="videos-grid">
-                        ${suggestions.map(s => `
-                            <div class="video-suggestion-card">
-                                <div class="video-info">
-                                    <h4>${s.title}</h4>
-                                    <a href="${s.url}" target="_blank" class="btn btn-secondary"><i class="fab fa-youtube"></i> مشاهدة</a>
-                                    <span class="suggestion-date">${new Date(s.date).toLocaleDateString('ar-EG')}</span>
+                <h2>الحالة</h2>
+                <div style="${blockStyle('#fff3f3')}">
+                    <h3 style="${titleStyle}"><span class="status-badge unqualified">غير مؤهل ويحتاج لتطوير</span></h3>
+                    <div class="info-grid">
+                        <div><strong>الاسم:</strong> ${currentUser.name}</div>
+                        <div><strong>العمر:</strong> ${currentUser.age}</div>
+                        <div><strong>المؤهل:</strong> ${currentUser.qualification || currentUser.education || 'غير متاح'}</div>
+                        <div><strong>التخصص:</strong> ${currentUser.specialization}</div>
+                        <div><strong>المستوى:</strong> ${currentUser.level}</div>
+                        <div><strong>الخبرة:</strong> ${currentUser.experience}</div>
+                    </div>
+                </div>
+
+                <div style="${blockStyle('#f7f7f7')}">
+                    <h3 style="${titleStyle}">معلومات التطوير</h3>
+                    <div class="info-grid">
+                        <div><strong>الوظيفة الحالية:</strong> ${currentUser.currentJob || 'لا توجد'}</div>
+                        <div><strong>الراتب:</strong> ${currentUser.salary || 'غير متاح'}</div>
+                        <div><strong>الهدف:</strong> ${currentUser.goals || 'غير محدد'}</div>
+                    </div>
+                </div>
+
+                <div style="${blockStyle('#ffe5e5')}">
+                    <h3 style="${titleStyle}">التحديات</h3>
+                    ${Array.isArray(currentUser.challenges) && currentUser.challenges.length ? `
+                        <ul>
+                            ${currentUser.challenges.map(c => `<li>${c}</li>`).join('')}
+                        </ul>` : '<p>غير متاح</p>'}
+                </div>
+
+                <div style="${blockStyle('#e6f3ff')}">
+                    <h3 style="${titleStyle}">المهارات القوية</h3>
+                    ${Array.isArray(currentUser.strengths) && currentUser.strengths.length ? `
+                        <div class="skills-grid">
+                            ${currentUser.strengths.map(s => `<span class=\"skill-tag\">${s}</span>`).join('')}
+                        </div>` : '<p>غير متاح</p>'}
+                </div>
+
+                <div style="${blockStyle('#f0f0f0')}">
+                    <h3 style="${titleStyle}">مجالات التحسين</h3>
+                    ${Array.isArray(currentUser.needsImprovement) && currentUser.needsImprovement.length ? `
+                        <ul>
+                            ${currentUser.needsImprovement.map(n => `<li>${n}</li>`).join('')}
+                        </ul>` : '<p>غير متاح</p>'}
+                </div>
+
+                <div style="${blockStyle('#ffe8a3')}">
+                    <h3 style="${titleStyle}">معلومات المينتور المتابع</h3>
+                    <div class="info-grid">
+                        <div><strong>المينتور:</strong> ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</div>
+                        <div><strong>آخر تواصل:</strong> ${currentUser.lastContact || 'غير متاح'}</div>
+                        <div><strong>تقييم الشاب:</strong> ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}</div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <h4 style="${titleStyle}">اقتراحات المينتور</h4>
+                        ${suggestions.length ? `
+                        <div class="videos-grid">
+                            ${suggestions.map(s => `
+                                <div class=\"video-suggestion-card\">
+                                    <div class=\"video-info\">
+                                        <h4>${s.title}</h4>
+                                        <a href=\"${s.url}\" target=\"_blank\" class=\"btn btn-secondary\"><i class=\"fab fa-youtube\"></i> مشاهدة</a>
+                                        <span class=\"suggestion-date\">${new Date(s.date).toLocaleDateString('ar-EG')}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('')}
-                    </div>` : '<p>لم يقترح المينتور محتوى بعد. تابع قريبًا.</p>'}
-                </div>`;
+                            `).join('')}
+                        </div>` : '<p>لا توجد اقتراحات بعد.</p>'}
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                    <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
+                    <button class="btn btn-secondary" onclick="openLearningPath()">مسار التعلم</button>
+                    <button class="btn btn-secondary" onclick="openMentorCourses()">كورسات المنتور</button>
+                    <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
+                </div>
+            `;
         }
 
         dashboardPage.querySelector('.container')?.appendChild(section);
@@ -1125,6 +1188,60 @@ function loadSuggestedVideos(students) {
     };
     window.generateReport = function generateReport() {
         alert('تم توليد تقرير مبدئي (Prototype)');
+    };
+
+    // Simple info modals for actions
+    window.openCommunityInfo = function openCommunityInfo() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                <h3>مجتمع المنصة</h3>
+                <p>انضم إلى مجتمعنا للتواصل والدعم.</p>
+                <a href="https://t.me/your_community_link" target="_blank" class="btn btn-primary"><i class="fab fa-telegram"></i> الذهاب للتلجرام</a>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    };
+
+    window.openLearningPath = function openLearningPath() {
+        const spec = (currentUser && currentUser.specialization) || '';
+        const stepsProg = ['أساسيات البرمجة', 'HTML/CSS', 'JavaScript', 'مشروع بسيط', 'Git/GitHub'];
+        const stepsDesign = ['أساسيات التصميم', 'مبادئ الألوان والخطوط', 'أدوات Figma/Photoshop', 'نماذج UI', 'بورتفوليو'];
+        const steps = spec === 'تصميم' ? stepsDesign : stepsProg;
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                <h3>مسار التعلم - ${spec || 'عام'}</h3>
+                <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    };
+
+    window.openMentorCourses = function openMentorCourses() {
+        const mentor = mockMentors.find(m => m.name === (currentUser?.assignedMentor || ''));
+        const list = mentor?.courses || [];
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                <h3>كورسات المينتور</h3>
+                ${list.length ? list.map(c => `<div class=\"course-card\"><h4>${c.title}</h4><a class=\"btn btn-secondary\" target=\"_blank\" href=\"${c.url}\"><i class=\"fab fa-youtube\"></i> مشاهدة</a></div>`).join('') : '<p>لا توجد كورسات متاحة.</p>'}
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'block';
+    };
+
+    window.requestMentorChange = function requestMentorChange() {
+        alert('تم إرسال طلب تغيير المينتور. سيتم مراجعته من إدارة المنصة.');
     };
 
     // Admin Panel: assign mentor and set status
