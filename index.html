@@ -82,8 +82,8 @@
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-users"></i>
-                    <h3>8</h3>
-                    <p>مينتورز متابعين</p>
+                    <h3>1</h3>
+                    <p>مينتور متابع</p>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-book"></i>
@@ -94,6 +94,42 @@
                     <i class="fas fa-trophy"></i>
                     <h3>4.8</h3>
                     <p>تقييم</p>
+                </div>
+            </div>
+
+            <div class="assigned-mentor-section">
+                <h2>المينتور المُعيَّن لك</h2>
+                <div id="assigned-mentor-card">
+                    <div class="mentor-card assigned-mentor" onclick="showPage('mentors')">
+                        <div class="mentor-header">
+                            <div class="mentor-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="mentor-info">
+                                <h3>د. أحمد محمد</h3>
+                                <p class="mentor-specialization">برمجة</p>
+                                <p class="mentor-experience">8 سنوات</p>
+                            </div>
+                            <div class="mentor-rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.8</span>
+                            </div>
+                        </div>
+                        <div class="mentor-description">
+                            <p>مطور برمجيات محترف مع خبرة في تطوير تطبيقات الويب والموبايل</p>
+                        </div>
+                        <div class="mentor-tags">
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">React</span>
+                            <span class="tag">Node.js</span>
+                            <span class="tag">Python</span>
+                        </div>
+                        <div class="mentor-actions">
+                            <button class="btn btn-primary" onclick="event.stopPropagation(); showPage('mentors')">
+                                <i class="fas fa-comments"></i> بدء محادثة
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -112,7 +148,23 @@
             <div class="page-header">
                 <h1>المينتور</h1>
             </div>
-            <!-- Chat UI will be rendered here by script.js for youth/mentor -->
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="avatar"><i class="fas fa-user-tie"></i></div>
+                    <div class="user-info">
+                        <h3>د. أحمد محمد</h3>
+                        <p>برمجة - 8 سنوات</p>
+                    </div>
+                    <div class="status">متصل الآن</div>
+                </div>
+                <div class="chat-messages" id="chat-messages-youth">
+                    <!-- Messages will be loaded from JavaScript -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="message-input-youth" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage('youth')}">
+                    <button onclick="sendChatMessage('youth')"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
         </div>
     </div>
 

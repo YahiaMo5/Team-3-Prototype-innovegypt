@@ -3,6 +3,14 @@ let currentUser = null;
 let currentTab = 'youth';
 let userType = null; // 'youth' or 'mentor'
 
+// Default demo data for when not logged in
+const defaultUser = {
+    id: 1,
+    name: "أحمد محمد",
+    email: "ahmed@example.com",
+    assignedMentor: "د. أحمد محمد"
+};
+
 const STORAGE = {
     get(key) { try { return sessionStorage.getItem(key); } catch { return null; } },
     set(key, val) { try { sessionStorage.setItem(key, val); } catch {} },
@@ -315,6 +323,50 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPersistedState();
     setupEventListeners();
     hideAllPagesExceptLogin();
+    
+    // Add demo welcome message for chat if not exists
+    setTimeout(() => {
+        const key = 'chat_youth';
+        const existingMessages = (() => { try { return STORAGE.getJSON(key) || []; } catch { return []; } })();
+        if (existingMessages.length === 0) {
+            const demoMessages = [
+                {
+                    from: 'mentor',
+                    text: 'مرحباً أحمد! أنا د. أحمد محمد، مينتورك الشخصي. كيف يمكنني مساعدتك اليوم؟',
+                    time: '2:30 م',
+                    id: Date.now() - 30000
+                },
+                {
+                    from: 'youth',
+                    text: 'مرحباً دكتور! سعيد بالتعرف عليك. أريد تحسين مهاراتي في البرمجة.',
+                    time: '2:32 م',
+                    id: Date.now() - 25000
+                },
+                {
+                    from: 'mentor',
+                    text: 'ممتاز! أنصحك بالبدء بـ JavaScript وتطوير مشاريع عملية. هل لديك خبرة سابقة؟',
+                    time: '2:35 م',
+                    id: Date.now() - 20000
+                },
+                {
+                    from: 'youth',
+                    text: 'نعم، لدي خبرة بسيطة لكن أريد تطوير مهاراتي أكثر.',
+                    time: '2:37 م',
+                    id: Date.now() - 15000
+                },
+                {
+                    from: 'mentor',
+                    text: 'رائع! سأرسل لك خطة دراسية مناسبة وبعض المشاريع العملية.',
+                    time: '2:40 م',
+                    id: Date.now() - 10000
+                }
+            ];
+            STORAGE.setJSON(key, demoMessages);
+        }
+        
+        // Update user name for demo mode
+        updateUserName();
+    }, 100);
 });
 
 function setupEventListeners() {
@@ -340,11 +392,6 @@ function hideAllPagesExceptLogin() {
 
 // Navigation
 function showPage(pageName) {
-    if (!currentUser) {
-        alert('يرجى تسجيل الدخول أولاً');
-        return;
-    }
-
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => {
         page.classList.remove('active');
@@ -356,10 +403,29 @@ function showPage(pageName) {
         selectedPage.classList.add('active');
         selectedPage.style.display = 'block';
         loadPageData(pageName);
+        
+        // Update user name in any case
+        updateUserName();
+        
+        // Load demo chat messages for mentors page
+        if (pageName === 'mentors') {
+            setTimeout(() => {
+                const messagesContainer = document.getElementById('chat-messages-youth');
+                if (messagesContainer) {
+                    loadPersistedChat('youth');
+                }
+            }, 200);
+        }
     }
 }
 
 function loadPageData(pageName) {
+    // Set default values for demo mode
+    if (!currentUser) {
+        currentUser = defaultUser;
+        userType = 'youth';
+    }
+    
     switch(pageName) {
         case 'dashboard':
             loadDashboardData();
@@ -510,22 +576,22 @@ function updateNavigationForMentor() {
 }
 
 function updateUserName() {
-    if (!currentUser) return;
+    const user = currentUser || defaultUser;
     
     const userNameElement = document.getElementById('user-name');
     if (userNameElement) {
-        userNameElement.textContent = currentUser.name;
+        userNameElement.textContent = user.name;
     }
     
     // Update profile page name and email
     const profileName = document.getElementById('profile-name');
     if (profileName) {
-        profileName.textContent = currentUser.name;
+        profileName.textContent = user.name;
     }
     
     const profileEmail = document.getElementById('profile-email');
     if (profileEmail) {
-        profileEmail.textContent = currentUser.email || 'user@example.com';
+        profileEmail.textContent = user.email || 'user@example.com';
     }
 }
 
@@ -920,7 +986,8 @@ function loadSuggestedVideos(students) {
         if (!container) return;
         
         // Find the assigned mentor for the current user
-        const assignedMentor = mockMentors.find(m => m.name === currentUser.assignedMentor);
+        const user = currentUser || defaultUser;
+        const assignedMentor = mockMentors.find(m => m.name === user.assignedMentor);
         
         if (assignedMentor) {
             container.innerHTML = `
@@ -1528,7 +1595,7 @@ function sendChatMessage(target) {
     
     const messageText = input.value.trim();
     const message = { 
-        from: userType, 
+        from: userType || 'youth', // Default to youth if not logged in
         text: messageText, 
         time: new Date().toLocaleTimeString('ar-EG'),
         id: Date.now()
