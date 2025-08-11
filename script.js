@@ -998,7 +998,7 @@ function loadSuggestedVideos(students) {
                 <div class="status-section-card">
                     <h3 class="section-title">حالتك: مؤهل للتوظيف/ التدريب</h3>
 
-                    <h3 class="section-title">معلومات الأساسية</h3>
+                    <h3 class="section-title">معلومات الاساسية</h3>
                     <div class="chip-list neutral">
                         ${chip(`الاسم: ${currentUser.name}`, 'neutral')}
                         ${chip(`العمر: ${currentUser.age}`, 'neutral')}
@@ -1082,7 +1082,9 @@ function loadSuggestedVideos(students) {
 
             section.innerHTML = `
                 <div class="status-section-card">
-                    <h3 class="section-title">الحالة</h3>
+                    <h3 class="section-title">حالتك: غير مؤهل ويحتاج لتطوير</h3>
+
+                    <h3 class="section-title">معلومات الاساسية</h3>
                     <div class="chip-list neutral">
                         ${chip(`الاسم: ${currentUser.name}`, 'neutral')}
                         ${chip(`العمر: ${currentUser.age}`, 'neutral')}
@@ -1118,6 +1120,27 @@ function loadSuggestedVideos(students) {
                             ? currentUser.needsImprovement.map(n => chip(n, 'gray')).join('')
                             : '<span class="chip neutral">غير متاح</span>'}
                     </div>
+
+                    <h3 class="section-title">معلومات المينتور المتابع</h3>
+                    <div class="chip-list neutral">
+                        ${chip(`المينتور: ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}`, 'neutral')}
+                        ${chip(`آخر تواصل: ${currentUser.lastContact || 'غير متاح'}`, 'neutral')}
+                        ${chip(`تقييم الشاب: ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}`, 'neutral')}
+                    </div>
+
+                    <h3 class="section-title">اقتراحات المينتور</h3>
+                    ${suggestions.length ? `
+                        <div class="videos-grid">
+                            ${suggestions.map(s => `
+                                <div class="video-suggestion-card">
+                                    <div class="video-info">
+                                        <h4>${s.title}</h4>
+                                        <a href="${s.url}" target="_blank" class="btn btn-secondary"><i class="fab fa-youtube"></i> مشاهدة</a>
+                                        <span class="suggestion-date">${new Date(s.date).toLocaleDateString('ar-EG')}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>` : '<span class="chip neutral">لا توجد اقتراحات بعد.</span>'}
 
                     <div class="actions-row" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
                         <button class="btn btn-primary" onclick="openCommunityInfo()">انضمام للمجتمع</button>
