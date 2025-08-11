@@ -3,6 +3,13 @@ let currentUser = null;
 let currentTab = 'youth';
 let userType = null; // 'youth' or 'mentor'
 
+const STORAGE = {
+    get(key) { try { return sessionStorage.getItem(key); } catch { return null; } },
+    set(key, val) { try { sessionStorage.setItem(key, val); } catch {} },
+    getJSON(key) { try { return JSON.parse(sessionStorage.getItem(key)) || null; } catch { return null; } },
+    setJSON(key, obj) { try { sessionStorage.setItem(key, JSON.stringify(obj)); } catch {} }
+};
+
 const STORAGE_KEYS = {
     youthOverrides: 'youth_overrides',
     mentorSuggestions: 'mentor_suggestions'
@@ -10,7 +17,7 @@ const STORAGE_KEYS = {
 
 function loadPersistedState() {
     try {
-        const overridesJson = localStorage.getItem(STORAGE_KEYS.youthOverrides);
+        const overridesJson = STORAGE.get(STORAGE_KEYS.youthOverrides);
         if (overridesJson) {
             const overrides = JSON.parse(overridesJson);
             if (Array.isArray(overrides)) {
@@ -41,12 +48,12 @@ function saveYouthOverrides() {
         selectedCompany: y.selectedCompany || null,
         applicationSubmittedAt: y.applicationSubmittedAt || null
     }));
-    localStorage.setItem(STORAGE_KEYS.youthOverrides, JSON.stringify(overrides));
+    STORAGE.set(STORAGE_KEYS.youthOverrides, JSON.stringify(overrides));
 }
 
 function getSuggestionsForStudent(studentId) {
     try {
-        const json = localStorage.getItem(STORAGE_KEYS.mentorSuggestions);
+        const json = STORAGE.get(STORAGE_KEYS.mentorSuggestions);
         const all = json ? JSON.parse(json) : [];
         return all.filter(s => s.studentId === studentId);
     } catch {
@@ -55,11 +62,9 @@ function getSuggestionsForStudent(studentId) {
 }
 
 function addSuggestionForStudent(suggestion) {
-    const list = (() => {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.mentorSuggestions)) || []; } catch { return []; }
-    })();
+    const list = (() => { try { return STORAGE.getJSON(STORAGE_KEYS.mentorSuggestions) || []; } catch { return []; } })();
     list.push(suggestion);
-    localStorage.setItem(STORAGE_KEYS.mentorSuggestions, JSON.stringify(list));
+    STORAGE.setJSON(STORAGE_KEYS.mentorSuggestions, list);
 }
 
 // Mock Data
@@ -360,11 +365,7 @@ function loadPageData(pageName) {
             loadDashboardData();
             break;
         case 'mentors':
-            if (userType === 'youth') {
-                loadMentorsData();
-            } else {
-                loadMentorDashboard();
-            }
+            loadMentorsData();
             break;
         case 'courses':
             if (userType === 'youth') {
@@ -435,7 +436,7 @@ function loginAsYouth() {
     // اختيار بالتناوب بين مؤهل/غير مؤهل
     let preferQualifiedNext = true;
     try {
-        const raw = localStorage.getItem('alt_login_qualified_next');
+        const raw = STORAGE.get('alt_login_qualified_next');
         if (raw !== null) preferQualifiedNext = raw === 'true';
     } catch {}
 
@@ -446,7 +447,7 @@ function loginAsYouth() {
 
     currentUser = { ...picked, email: 'youth@example.com' };
 
-    try { localStorage.setItem('alt_login_qualified_next', (!preferQualifiedNext).toString()); } catch {}
+    STORAGE.set('alt_login_qualified_next', (!preferQualifiedNext).toString());
 
     showPage('dashboard');
     updateNavigationForYouth();
@@ -557,98 +558,35 @@ function loadYouthDashboard() {
 }
 
 function loadMentorDashboard() {
-    const container = document.querySelector('.container');
+    const container = document.querySelector('#dashboard-page .container');
     if (!container) return;
-    
-    // البحث عن الشباب المخصصين لهذا المينتور
-    const assignedStudents = mockYouth.filter(youth => youth.assignedMentor === currentUser.name);
-    
+    const assignedStudents = mockYouth.filter(y => y.assignedMentor === currentUser.name);
     container.innerHTML = `
         <div class="dashboard-header">
             <h1>مرحباً ${currentUser.name} 👋</h1>
-            <p>الشباب تحت إشرافك</p>
+            <p>مرحباً بك في لوحة المينتور</p>
         </div>
-
-        <div class="mentor-dashboard-grid">
-            <div class="mentor-stats">
-                <h3>إحصائيات سريعة</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-users"></i>
-                        <h3>${assignedStudents.length}</h3>
-                        <p>طالب</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-user-check"></i>
-                        <h3>${assignedStudents.filter(s => s.status === 'qualified').length}</h3>
-                        <p>مؤهل</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-user-clock"></i>
-                        <h3>${assignedStudents.filter(s => s.status === 'unqualified').length}</h3>
-                        <p>تحت التطوير</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mentor-actions-section">
-                <button class="btn btn-primary" onclick="showSuggestVideoModal()">
-                    <i class="fas fa-video"></i>
-                    اقتراح فيديو تعليمي
-                </button>
-                <button class="btn btn-secondary" onclick="generateReport()">
-                    <i class="fas fa-file-alt"></i>
-                    تقرير
-                </button>
-            </div>
-
-            <div class="assigned-students-section">
-                <h3>الشباب تحت إشرافك</h3>
-                <div class="students-grid">
-                    ${assignedStudents.map(student => `
-                        <div class="student-card ${student.status}">
-                            <div class="student-header">
-                                <div class="student-info">
-                                    <h4>${student.name}</h4>
-                                    <span class="student-level">${student.specialization} - ${student.level}</span>
-                                    <span class="status-badge ${student.status}">
-                                        ${student.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}
-                                    </span>
-                                </div>
-                                <div class="student-stats">
-                                    <span><i class="fas fa-star"></i> ${student.points} نقطة</span>
-                                    <span><i class="fas fa-book"></i> ${student.completedCourses} كورس</span>
-                                </div>
+        <div class="status-section-card">
+            <h3 class="section-title">الطلاب الذين يتم متابعتهم</h3>
+            <div class="students-grid">
+                ${assignedStudents.map(s => `
+                    <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
+                        <div class="student-header">
+                            <div class="student-info">
+                                <h4>${s.name}</h4>
+                                <span class="student-level">${s.specialization} - ${s.level}</span>
+                                <span class="status-badge ${s.status}">${s.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}</span>
                             </div>
-                            <div class="student-skills">
-                                ${student.skills.map(skill => `
-                                    <span class="skill-tag">${skill}</span>
-                                `).join('')}
-                            </div>
-                            <div class="student-actions">
-                                <button onclick="openStudentChat(${student.id})" class="btn btn-primary">
-                                    <i class="fas fa-comments"></i> محادثة
-                                </button>
-                                <button onclick="showSuggestVideoModal(${student.id})" class="btn btn-secondary">
-                                    <i class="fas fa-video"></i> اقتراح فيديو
-                                </button>
-                                <button onclick="viewStudentProgress(${student.id})" class="btn btn-secondary">
-                                    <i class="fas fa-chart-line"></i> التقدم
-                                </button>
+                            <div class="student-stats">
+                                <span><i class="fas fa-star"></i> ${s.points} نقطة</span>
+                                <span><i class="fas fa-book"></i> ${s.completedCourses} كورس</span>
                             </div>
                         </div>
-                    `).join('')}
-                </div>
+                        <div class="student-skills">${(s.skills||[]).map(k=>`<span class="skill-tag">${k}</span>`).join('')}</div>
+                    </div>
+                `).join('')}
             </div>
-
-            <div class="suggested-videos-section">
-                <h3>الفيديوهات المقترحة</h3>
-                <div class="videos-grid">
-                    ${loadSuggestedVideos(assignedStudents)}
-                </div>
-            </div>
-        </div>
-    `;
+        </div>`;
 }
 
 function showSuggestVideoModal(studentId = null) {
@@ -1400,14 +1338,14 @@ function sendChatMessage(target) {
 
 function persistChatMessage(target, message) {
     const key = `chat_${target}`;
-    const list = (() => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } })();
+    const list = (() => { try { return STORAGE.getJSON(key) || []; } catch { return []; } })();
     list.push(message);
-    localStorage.setItem(key, JSON.stringify(list));
+    STORAGE.setJSON(key, list);
 }
 
 function loadPersistedChat(target) {
     const key = `chat_${target}`;
-    const list = (() => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } })();
+    const list = (() => { try { return STORAGE.getJSON(key) || []; } catch { return []; } })();
     const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
     const messages = document.getElementById(msgId);
     if (!messages) return;
@@ -1420,6 +1358,56 @@ function loadMentorsData() {
     if (userType === 'youth') {
         renderYouthMentorChat();
     } else {
-        renderMentorStudentsChat();
+        renderMentorStudentsCards();
     }
+}
+
+function renderMentorStudentsCards() {
+    const container = document.getElementById('mentors-chat-container');
+    if (!container) return;
+    const students = mockYouth.filter(y => y.assignedMentor === mockMentors[0].name);
+    container.innerHTML = `
+        <div class="page-header"><h1>الطلاب الذين يتم متابعتهم</h1></div>
+        <div class="students-grid">
+            ${students.map(s => `
+                <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
+                    <div class="student-header">
+                        <div class="student-info">
+                            <h4>${s.name}</h4>
+                            <span class="student-level">${s.specialization} - ${s.level}</span>
+                        </div>
+                        <div class="student-stats">
+                            <span><i class="fas fa-star"></i> ${s.points} نقطة</span>
+                            <span><i class="fas fa-book"></i> ${s.completedCourses} كورس</span>
+                        </div>
+                    </div>
+                    <div class="student-skills">${(s.skills||[]).map(k=>`<span class="skill-tag">${k}</span>`).join('')}</div>
+                </div>
+            `).join('')}
+        </div>`;
+}
+
+function openMentorChat(studentId) {
+    const container = document.getElementById('mentors-chat-container');
+    if (!container) return;
+    const s = mockYouth.find(x => x.id === studentId);
+    if (!s) return;
+    container.innerHTML = `
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="avatar"><i class="fas fa-user-graduate"></i></div>
+                <div class="user-info">
+                    <h3>${s.name}</h3>
+                    <p>${s.specialization} - ${s.level}</p>
+                </div>
+                <div class="status">متصل الآن</div>
+            </div>
+            <div class="chat-messages" id="chat-messages-${s.id}"></div>
+            <div class="chat-input">
+                <input type="text" id="message-input-${s.id}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${s.id})}">
+                <button onclick="sendChatMessage(${s.id})"><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div style="margin-top:10px;"><button class="btn btn-secondary" onclick="loadMentorsData()">رجوع إلى قائمة الطلاب</button></div>
+        </div>`;
+    loadPersistedChat(s.id);
 }
