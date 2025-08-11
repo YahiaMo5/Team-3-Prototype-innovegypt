@@ -77,113 +77,10 @@ const mockMentors = [
         age: 35,
         qualification: "دكتوراه في علوم الحاسوب",
         expertise: "تطوير تطبيقات الويب والموبايل، الذكاء الاصطناعي",
-        type: "qualified", // للشباب المؤهلين
+        type: "qualified",
         courses: [
-            {
-                id: 1,
-                title: "مقدمة في تطوير الويب",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example1",
-                duration: "8 أسابيع",
-                level: "مبتدئ",
-                price: "مجاني"
-            },
-            {
-                id: 2,
-                title: "React.js المتقدم",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example2",
-                duration: "6 أسابيع",
-                level: "متقدم",
-                price: "مجاني"
-            }
-        ]
-    },
-    {
-        id: 2,
-        name: "سارة أحمد",
-        specialization: "تصميم",
-        level: "متوسط",
-        rating: 4.6,
-        students: 32,
-        experience: "5 سنوات",
-        description: "مصممة جرافيك محترفة متخصصة في تصميم واجهات المستخدم",
-        tags: ["UI/UX", "Figma", "Adobe XD", "Photoshop"],
-        age: 28,
-        qualification: "ماجستير في التصميم الرقمي",
-        expertise: "تصميم واجهات المستخدم، تصميم الجرافيك",
-        type: "qualified", // للشباب المؤهلين
-        courses: [
-            {
-                id: 3,
-                title: "تصميم واجهات المستخدم",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example3",
-                duration: "6 أسابيع",
-                level: "متوسط",
-                price: "مجاني"
-            }
-        ]
-    },
-    {
-        id: 3,
-        name: "محمد علي",
-        specialization: "برمجة",
-        level: "متوسط",
-        rating: 4.5,
-        students: 28,
-        experience: "4 سنوات",
-        description: "مطور برمجيات متخصص في تعليم المبتدئين وتطوير مهاراتهم",
-        tags: ["HTML", "CSS", "JavaScript", "Python"],
-        age: 30,
-        qualification: "بكالوريوس هندسة برمجيات",
-        expertise: "تعليم البرمجة للمبتدئين، تطوير تطبيقات بسيطة",
-        type: "unqualified", // للشباب غير المؤهلين
-        courses: [
-            {
-                id: 4,
-                title: "أساسيات البرمجة للمبتدئين",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example4",
-                duration: "10 أسابيع",
-                level: "مبتدئ",
-                price: "مجاني"
-            },
-            {
-                id: 5,
-                title: "HTML و CSS من الصفر",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example5",
-                duration: "6 أسابيع",
-                level: "مبتدئ",
-                price: "مجاني"
-            }
-        ]
-    },
-    {
-        id: 4,
-        name: "فاطمة حسن",
-        specialization: "تصميم",
-        level: "مبتدئ",
-        rating: 4.3,
-        students: 20,
-        experience: "3 سنوات",
-        description: "مصممة متخصصة في تعليم أساسيات التصميم للمبتدئين",
-        tags: ["Photoshop", "Illustrator", "تصميم أساسي"],
-        age: 26,
-        qualification: "بكالوريوس فنون تطبيقية",
-        expertise: "تعليم أساسيات التصميم، تصميم الجرافيك للمبتدئين",
-        type: "unqualified", // للشباب غير المؤهلين
-        courses: [
-            {
-                id: 6,
-                title: "أساسيات التصميم الجرافيكي",
-                platform: "YouTube",
-                url: "https://youtube.com/watch?v=example6",
-                duration: "8 أسابيع",
-                level: "مبتدئ",
-                price: "مجاني"
-            }
+            { id: 1, title: "مقدمة في تطوير الويب", platform: "YouTube", url: "https://youtube.com/watch?v=example1", duration: "8 أسابيع", level: "مبتدئ", price: "مجاني" },
+            { id: 2, title: "React.js المتقدم", platform: "YouTube", url: "https://youtube.com/watch?v=example2", duration: "6 أسابيع", level: "متقدم", price: "مجاني" }
         ]
     }
 ];
@@ -1121,11 +1018,11 @@ function loadSuggestedVideos(students) {
                             : '<span class="chip neutral">غير متاح</span>'}
                     </div>
 
-                    <h3 class="section-title">معلومات المينتور المتابع</h3>
+                    <h3 class="section-title">المينتور المتابع</h3>
                     <div class="chip-list neutral">
-                        ${chip(`المينتور: ${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}`, 'neutral')}
-                        ${chip(`آخر تواصل: ${currentUser.lastContact || 'غير متاح'}`, 'neutral')}
-                        ${chip(`تقييم الشاب: ${typeof currentUser.rating !== 'undefined' ? currentUser.rating : 'غير متاح'}`, 'neutral')}
+                        ${chip(`الاسم: ${mockMentors[0].name}`, 'neutral')}
+                        ${chip(`الخبرات: ${mockMentors[0].experience}`, 'neutral')}
+                        ${chip(`التخصص: ${mockMentors[0].specialization}`, 'neutral')}
                     </div>
 
                     <h3 class="section-title">اقتراحات المينتور</h3>
@@ -1459,3 +1356,94 @@ function openStudentChat() { if (window.openStudentChat) return window.openStude
 function viewStudentProgress() { if (window.viewStudentProgress) return window.viewStudentProgress.apply(this, arguments); }
 function editSuggestion() { if (window.editSuggestion) return window.editSuggestion.apply(this, arguments); }
 function generateReport() { if (window.generateReport) return window.generateReport.apply(this, arguments); }
+
+// Mentors page chat rendering
+function renderYouthMentorChat() {
+    const container = document.getElementById('mentors-chat-container');
+    if (!container) return;
+    const mentor = mockMentors[0];
+    container.innerHTML = `
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="avatar"><i class="fas fa-user-tie"></i></div>
+                <div class="user-info">
+                    <h3>${mentor.name}</h3>
+                    <p>${mentor.specialization} - ${mentor.experience}</p>
+                </div>
+                <div class="status">متصل الآن</div>
+            </div>
+            <div class="chat-messages" id="chat-messages-youth"></div>
+            <div class="chat-input">
+                <input type="text" id="message-input-youth" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage('youth')}">
+                <button onclick="sendChatMessage('youth')"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>`;
+    loadPersistedChat('youth');
+}
+
+function renderMentorStudentsChat() {
+    const container = document.getElementById('mentors-chat-container');
+    if (!container) return;
+    const students = mockYouth.filter(y => y.assignedMentor === mockMentors[0].name);
+    container.innerHTML = `
+        <div class="students-chat-list">
+            ${students.map(s => `
+                <div class="chat-container" style="margin-bottom:20px;">
+                    <div class="chat-header">
+                        <div class="avatar"><i class="fas fa-user-graduate"></i></div>
+                        <div class="user-info">
+                            <h3>${s.name}</h3>
+                            <p>${s.specialization} - ${s.level}</p>
+                        </div>
+                        <div class="status">متصل الآن</div>
+                    </div>
+                    <div class="chat-messages" id="chat-messages-${s.id}"></div>
+                    <div class="chat-input">
+                        <input type="text" id="message-input-${s.id}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${s.id})}">
+                        <button onclick="sendChatMessage(${s.id})"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>`;
+    students.forEach(s => loadPersistedChat(s.id));
+}
+
+function sendChatMessage(target) {
+    const isYouthMode = target === 'youth';
+    const inputId = isYouthMode ? 'message-input-youth' : `message-input-${target}`;
+    const msgId = isYouthMode ? 'chat-messages-youth' : `chat-messages-${target}`;
+    const input = document.getElementById(inputId);
+    const messages = document.getElementById(msgId);
+    if (!input || !messages || !input.value.trim()) return;
+    const message = { from: userType, text: input.value, time: new Date().toLocaleTimeString('ar-EG') };
+    messages.insertAdjacentHTML('beforeend', `<div class="message ${userType}"><div class="content">${message.text}</div><span class="time">${message.time}</span></div>`);
+    persistChatMessage(target, message);
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function persistChatMessage(target, message) {
+    const key = `chat_${target}`;
+    const list = (() => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } })();
+    list.push(message);
+    localStorage.setItem(key, JSON.stringify(list));
+}
+
+function loadPersistedChat(target) {
+    const key = `chat_${target}`;
+    const list = (() => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } })();
+    const msgId = target === 'youth' ? 'chat-messages-youth' : `chat-messages-${target}`;
+    const messages = document.getElementById(msgId);
+    if (!messages) return;
+    list.forEach(m => messages.insertAdjacentHTML('beforeend', `<div class="message ${m.from}"><div class="content">${m.text}</div><span class="time">${m.time}</span></div>`));
+    messages.scrollTop = messages.scrollHeight;
+}
+
+// Override mentors page loader
+function loadMentorsData() {
+    if (userType === 'youth') {
+        renderYouthMentorChat();
+    } else {
+        renderMentorStudentsChat();
+    }
+}
