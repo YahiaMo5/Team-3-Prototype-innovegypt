@@ -431,27 +431,29 @@ function demoLogin() {
 }
 
 function loginAsYouth() {
+    // اختيار شاب عشوائي مع تبديل الحالة
+    const youthIndex = Math.floor(Math.random() * mockYouth.length);
+    currentUser = { ...mockYouth[youthIndex] };
+    
+    // تبديل تلقائي بين المؤهل وغير المؤهل
+    const lastStatus = sessionStorage.getItem('lastYouthStatus');
+    if (lastStatus === 'qualified') {
+        currentUser.status = 'not_qualified';
+        currentUser.currentJob = null;
+        currentUser.rating = '3.2';
+        sessionStorage.setItem('lastYouthStatus', 'not_qualified');
+    } else {
+        currentUser.status = 'qualified';
+        currentUser.currentJob = 'مطور ويب في شركة تقنية';
+        currentUser.rating = '4.8';
+        sessionStorage.setItem('lastYouthStatus', 'qualified');
+    }
+    
     userType = 'youth';
-
-    // اختيار بالتناوب بين مؤهل/غير مؤهل
-    let preferQualifiedNext = true;
-    try {
-        const raw = STORAGE.get('alt_login_qualified_next');
-        if (raw !== null) preferQualifiedNext = raw === 'true';
-    } catch {}
-
-    const pool = mockYouth.filter(y => y.status === (preferQualifiedNext ? 'qualified' : 'unqualified'));
-    const fallback = mockYouth;
-    const source = pool.length ? pool : fallback;
-    const picked = source[Math.floor(Math.random() * source.length)];
-
-    currentUser = { ...picked, email: 'youth@example.com' };
-
-    STORAGE.set('alt_login_qualified_next', (!preferQualifiedNext).toString());
-
-    showPage('dashboard');
     updateNavigationForYouth();
+    showPage('dashboard');
     updateUserName();
+    loadYouthDashboard();
 }
 
 function loginAsMentor() {
