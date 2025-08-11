@@ -510,9 +510,22 @@ function updateNavigationForMentor() {
 }
 
 function updateUserName() {
+    if (!currentUser) return;
+    
     const userNameElement = document.getElementById('user-name');
     if (userNameElement) {
         userNameElement.textContent = currentUser.name;
+    }
+    
+    // Update profile page name and email
+    const profileName = document.getElementById('profile-name');
+    if (profileName) {
+        profileName.textContent = currentUser.name;
+    }
+    
+    const profileEmail = document.getElementById('profile-email');
+    if (profileEmail) {
+        profileEmail.textContent = currentUser.email || 'user@example.com';
     }
 }
 
@@ -535,8 +548,15 @@ function logout() {
         loginPage.style.display = 'block';
     }
     document.getElementById('login-form')?.reset();
+    
+    // Reset login tabs to default
+    currentTab = 'youth';
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    const youthTab = document.querySelector('.tab-btn');
+    if (youthTab) youthTab.classList.add('active');
 
-    // Reset navigation
+    // Reset navigation to default state
     const navMenu = document.getElementById('nav-menu');
     if (navMenu) {
         navMenu.innerHTML = `
@@ -549,10 +569,80 @@ function logout() {
         `;
     }
 
+    // Clean all page containers and reset to original state
+    cleanAllPageContainers();
+    
     // Clean injected sections
     document.getElementById('youth-status-section')?.remove();
     const mentorsChat = document.getElementById('mentors-chat-container');
     if (mentorsChat) mentorsChat.innerHTML = '';
+    
+    // Reset dashboard to original state
+    const dashboardContainer = document.querySelector('#dashboard-page .container');
+    if (dashboardContainer) {
+        dashboardContainer.innerHTML = `
+            <div class="dashboard-header">
+                <h1>مرحباً <span id="user-name">أحمد</span> 👋</h1>
+                <p>اكتشف المينتورز والكورسات المناسبة لمستواك</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-star"></i>
+                    <h3>1250</h3>
+                    <p>نقطة</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3>8</h3>
+                    <p>مينتورز متابعين</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-book"></i>
+                    <h3>12</h3>
+                    <p>كورس مكتمل</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-trophy"></i>
+                    <h3>4.8</h3>
+                    <p>تقييم</p>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h2>الكورسات الموصى بها</h2>
+                <div class="courses-grid" id="recommended-courses">
+                    <!-- Courses will be loaded here -->
+                </div>
+            </div>
+        `;
+    }
+}
+
+function cleanAllPageContainers() {
+    // Clean mentors page
+    const mentorsContainer = document.getElementById('mentors-chat-container');
+    if (mentorsContainer) {
+        mentorsContainer.innerHTML = `
+            <div class="page-header">
+                <h1>المينتور</h1>
+            </div>
+            <!-- Chat UI will be rendered here by script.js for youth/mentor -->
+        `;
+    }
+    
+    // Clean courses page
+    const coursesContainer = document.getElementById('all-courses');
+    if (coursesContainer) {
+        coursesContainer.innerHTML = '';
+    }
+    
+    // Clean profile page values to default
+    const profileName = document.getElementById('profile-name');
+    if (profileName) profileName.textContent = 'أحمد محمد';
+    
+    const profileEmail = document.getElementById('profile-email');
+    if (profileEmail) profileEmail.textContent = 'ahmed@example.com';
 }
 
 // Data Loading
@@ -574,16 +664,44 @@ function loadMentorDashboard() {
     const container = document.querySelector('#dashboard-page .container');
     if (!container) return;
     const assignedStudents = mockYouth.filter(y => y.assignedMentor === currentUser.name);
+    const qualifiedStudents = assignedStudents.filter(s => s.status === 'qualified');
+    const averageRating = assignedStudents.length > 0 ? 
+        (assignedStudents.reduce((sum, s) => sum + s.rating, 0) / assignedStudents.length).toFixed(1) : 0;
+    
     container.innerHTML = `
         <div class="dashboard-header">
             <h1>مرحباً ${currentUser.name} 👋</h1>
             <p>مرحباً بك في لوحة المينتور</p>
         </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <h3>${assignedStudents.length}</h3>
+                <p>إجمالي الطلاب</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-star"></i>
+                <h3>${averageRating}</h3>
+                <p>متوسط تقييم الطلاب</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>${qualifiedStudents.length}</h3>
+                <p>طلاب مؤهلين</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-book"></i>
+                <h3>${currentUser.courses || 3}</h3>
+                <p>كورسات متاحة</p>
+            </div>
+        </div>
+
         <div class="status-section-card">
             <h3 class="section-title">الطلاب الذين تتابعهم</h3>
             <div class="students-grid">
                 ${assignedStudents.map(s => `
-                    <div class="student-card" style="cursor:pointer;" onclick="openMentorChat(${s.id})">
+                    <div class="student-card" style="cursor:pointer;" onclick="showPage('mentors'); setTimeout(() => openMentorChat(${s.id}), 100);">
                         <div class="student-header">
                             <div class="student-info">
                                 <h4>${s.name}</h4>
@@ -1288,17 +1406,18 @@ function generateReport() { if (window.generateReport) return window.generateRep
 function renderYouthMentorChat() {
     const container = document.getElementById('mentors-chat-container');
     if (!container) return;
-    const header = container.querySelector('.page-header h1') || document.querySelector('#mentors-page .page-header h1');
-    if (header) header.textContent = 'المينتور';
-    const mentor = mockMentors[0];
+    
+    // Find the mentor assigned to current user
+    const assignedMentor = mockMentors.find(m => m.name === currentUser.assignedMentor) || mockMentors[0];
+    
     container.innerHTML = `
         <div class="page-header"><h1>المينتور</h1></div>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar"><i class="fas fa-user-tie"></i></div>
                 <div class="user-info">
-                    <h3>${mentor.name}</h3>
-                    <p>${mentor.specialization} - ${mentor.experience}</p>
+                    <h3>${assignedMentor.name}</h3>
+                    <p>${assignedMentor.specialization} - ${assignedMentor.experience}</p>
                 </div>
                 <div class="status">متصل الآن</div>
             </div>
@@ -1381,7 +1500,7 @@ function loadMentorsData() {
 function renderMentorStudentsCards() {
     const container = document.getElementById('mentors-chat-container');
     if (!container) return;
-    const students = mockYouth.filter(y => y.assignedMentor === mockMentors[0].name);
+    const students = mockYouth.filter(y => y.assignedMentor === currentUser.name);
     container.innerHTML = `
         <div class="page-header"><h1>الطلاب الذين تتابعهم</h1></div>
         <div class="students-grid">
@@ -1391,6 +1510,7 @@ function renderMentorStudentsCards() {
                         <div class="student-info">
                             <h4>${s.name}</h4>
                             <span class="student-level">${s.specialization} - ${s.level}</span>
+                            <span class="status-badge ${s.status}">${s.status === 'qualified' ? 'مؤهل' : 'تحت التطوير'}</span>
                         </div>
                         <div class="student-stats">
                             <span><i class="fas fa-star"></i> ${s.points} نقطة</span>
@@ -1409,7 +1529,10 @@ function openMentorChat(studentId) {
     const s = mockYouth.find(x => x.id === studentId);
     if (!s) return;
     container.innerHTML = `
-        <div class="page-header"><h1>محادثة: ${s.name}</h1></div>
+        <div class="page-header">
+            <h1>محادثة: ${s.name}</h1>
+            <button class="btn btn-secondary" onclick="loadMentorsData()" style="margin-top: 10px;">رجوع إلى قائمة الطلاب</button>
+        </div>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar"><i class="fas fa-user-graduate"></i></div>
@@ -1424,7 +1547,6 @@ function openMentorChat(studentId) {
                 <input type="text" id="message-input-${s.id}" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter'){sendChatMessage(${s.id})}">
                 <button onclick="sendChatMessage(${s.id})"><i class="fas fa-paper-plane"></i></button>
             </div>
-            <div style="margin-top:10px;"><button class="btn btn-secondary" onclick="loadMentorsData()">رجوع إلى قائمة الطلاب</button></div>
         </div>`;
     loadPersistedChat(s.id);
 }
