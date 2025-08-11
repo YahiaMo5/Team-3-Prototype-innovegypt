@@ -961,15 +961,6 @@ function loadSuggestedVideos(students) {
                         <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
                         <button class="btn btn-secondary" onclick="document.getElementById('jobs-chooser')?.scrollIntoView({behavior:'smooth', block:'center'})">تحديد الشركات</button>
                     </div>
-
-                    <div class="design-ref-container" style="margin-top:12px;">
-                        <div class="design-ref-actions">
-                            <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
-                        </div>
-                        <div id="design-ref" style="display:none; margin-top:10px;">
-                            <img src="${getDesignImageUrl()}" alt="Design reference"/>
-                        </div>
-                    </div>
                 </div>
             `;
         } else {
@@ -1045,15 +1036,6 @@ function loadSuggestedVideos(students) {
                         <button class="btn btn-secondary" onclick="openMentorCourses()">كورسات المنتور</button>
                         <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
                     </div>
-
-                    <div class="design-ref-container" style="margin-top:12px;">
-                        <div class="design-ref-actions">
-                            <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
-                        </div>
-                        <div id="design-ref" style="display:none; margin-top:10px;">
-                            <img src="${getDesignImageUrl()}" alt="Design reference"/>
-                        </div>
-                    </div>
                 </div>
             `;
         }
@@ -1066,12 +1048,6 @@ function loadSuggestedVideos(students) {
         } else {
             container.appendChild(section);
         }
-    };
-
-    window.toggleDesignRef = function toggleDesignRef() {
-        const el = document.getElementById('design-ref');
-        if (!el) return;
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
     };
 
     // Mentors listing page (youth view)
