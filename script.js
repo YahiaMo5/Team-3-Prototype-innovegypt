@@ -979,6 +979,7 @@ function loadSuggestedVideos(students) {
             const jobs = currentUser.jobOpportunities || [];
             const selectedCompany = currentUser.selectedCompany || '';
             const appAt = currentUser.applicationSubmittedAt || '';
+            const salaryText = currentUser.salary || 'حسب الشركة';
             section.innerHTML = `
                 <h2>حالة المؤهل</h2>
                 <div class="qualified-banner">
@@ -1006,6 +1007,9 @@ function loadSuggestedVideos(students) {
                     <div class="application-actions">
                         ${selectedCompany && !appAt ? `<button class="btn btn-secondary" onclick="submitApplication(${currentUser.id})"><i class=\"fas fa-paper-plane\"></i> تقديم الآن</button>` : ''}
                         ${appAt ? `<span class="application-status"><i class=\"fas fa-check\"></i> تم التقديم لـ <strong>${selectedCompany}</strong> بتاريخ ${new Date(appAt).toLocaleDateString('ar-EG')}</span>` : ''}
+                    </div>
+                    <div class="qualified-salary" style="margin-top:8px;">
+                        ${selectedCompany ? `<p><strong>الراتب المتوقع لدى ${selectedCompany}:</strong> ${salaryText}</p>` : '<p>سيظهر الراتب المتوقع بعد اختيار الشركة.</p>'}
                     </div>
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
                 </div>
@@ -1037,7 +1041,6 @@ function loadSuggestedVideos(students) {
                     <h3 class="section-title">معلومات التطوير</h3>
                     <div class="chip-list neutral">
                         ${chip(`الوظيفة الحالية: ${currentUser.currentJob || 'لا توجد'}`, 'neutral')}
-                        ${chip(`الراتب: ${currentUser.salary || 'غير متاح'}`, 'neutral')}
                         ${chip(`الهدف: ${currentUser.goals || 'غير محدد'}`, 'neutral')}
                     </div>
 
