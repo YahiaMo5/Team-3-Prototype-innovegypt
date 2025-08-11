@@ -534,14 +534,23 @@ function demoLogin() {
 
 function loginAsYouth() {
     userType = 'youth';
-    
-    // اختيار عشوائي لشاب من البيانات
-    const randomYouth = mockYouth[Math.floor(Math.random() * mockYouth.length)];
-    currentUser = {
-        ...randomYouth,
-        email: 'youth@example.com'
-    };
-    
+
+    // اختيار بالتناوب بين مؤهل/غير مؤهل
+    let preferQualifiedNext = true;
+    try {
+        const raw = localStorage.getItem('alt_login_qualified_next');
+        if (raw !== null) preferQualifiedNext = raw === 'true';
+    } catch {}
+
+    const pool = mockYouth.filter(y => y.status === (preferQualifiedNext ? 'qualified' : 'unqualified'));
+    const fallback = mockYouth;
+    const source = pool.length ? pool : fallback;
+    const picked = source[Math.floor(Math.random() * source.length)];
+
+    currentUser = { ...picked, email: 'youth@example.com' };
+
+    try { localStorage.setItem('alt_login_qualified_next', (!preferQualifiedNext).toString()); } catch {}
+
     showPage('dashboard');
     updateNavigationForYouth();
     updateUserName();
@@ -1092,7 +1101,14 @@ function loadSuggestedVideos(students) {
             `;
         }
 
-        dashboardPage.querySelector('.container')?.appendChild(section);
+        const container = dashboardPage.querySelector('.container');
+        if (!container) return;
+        const firstRecommendations = container.querySelector('.recommendations');
+        if (firstRecommendations) {
+            container.insertBefore(section, firstRecommendations);
+        } else {
+            container.appendChild(section);
+        }
     };
 
     window.toggleDesignRef = function toggleDesignRef() {
