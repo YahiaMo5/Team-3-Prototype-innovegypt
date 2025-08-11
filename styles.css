@@ -1514,10 +1514,11 @@ body {
   --chip-neutral-bg: #f3f4f6;
   --chip-danger-bg: #fee2e2;
   --chip-danger-text: #b91c1c;
-  --chip-sky-bg: #e0f2fe;
-  --chip-sky-text: #075985;
+  --chip-sky-bg: #dbeafe; /* deeper sky */
+  --chip-sky-text: #1e3a8a;
   --chip-gray-bg: #e5e7eb;
   --chip-gray-text: #374151;
+  --accent: #667eea; /* site accent */
 }
 
 /* Buttons: softer rounded */
@@ -1546,25 +1547,23 @@ body {
   box-shadow: var(--card-shadow);
 }
 .section-title {
-  margin: 16px 0 10px 0;
+  margin: 18px 0 12px 0;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #111827;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 6px;
-  border-inline-start: 4px solid #667eea;
-  padding-inline-start: 10px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 8px;
 }
 
 /* Chip sets */
-.chip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--chip-gap); margin-bottom: 8px; }
+.chip-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--chip-gap); margin-bottom: 10px; }
 .chip {
   display: inline-flex; align-items: center; padding: 8px 12px; border-radius: var(--chip-radius);
   font-size: 0.95rem; color: var(--text-neutral); border: 1px solid transparent;
 }
 .chip.neutral { background: var(--chip-neutral-bg); }
 .chip.danger { background: var(--chip-danger-bg); color: var(--chip-danger-text); border-color: #fecaca; }
-.chip.sky { background: var(--chip-sky-bg); color: var(--chip-sky-text); border-color: #bae6fd; }
+.chip.sky { background: var(--chip-sky-bg); color: var(--chip-sky-text); border-color: #bfdbfe; }
 .chip.gray { background: var(--chip-gray-bg); color: var(--chip-gray-text); border-color: #d1d5db; }
 .chip.success { background: #e7f6ec; color: #0f5132; border-color: #b7e4c7; }
 
