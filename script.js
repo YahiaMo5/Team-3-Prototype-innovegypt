@@ -954,7 +954,6 @@ function loadSuggestedVideos(students) {
     window.loadYouthStatus = function loadYouthStatus() {
         const dashboardPage = document.getElementById('dashboard-page');
         if (!dashboardPage || !currentUser) return;
-        // Remove previous injected section if exists
         const old = dashboardPage.querySelector('#youth-status-section');
         if (old) old.remove();
 
@@ -963,6 +962,10 @@ function loadSuggestedVideos(students) {
         section.className = 'recommendations';
 
         const isQualified = currentUser.status === 'qualified';
+        const getDesignImageUrl = () => isQualified 
+            ? 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/qualified.png'
+            : 'https://raw.githubusercontent.com/YahiaMo5/Team-3-Prototype-innovegypt/main/assent/unqualified.png';
+
         if (isQualified) {
             const jobs = currentUser.jobOpportunities || [];
             const selectedCompany = currentUser.selectedCompany || '';
@@ -996,6 +999,14 @@ function loadSuggestedVideos(students) {
                         ${appAt ? `<span class="application-status"><i class=\"fas fa-check\"></i> تم التقديم لـ <strong>${selectedCompany}</strong> بتاريخ ${new Date(appAt).toLocaleDateString('ar-EG')}</span>` : ''}
                     </div>
                     <p>المينتور المعين: <strong>${currentUser.assignedMentor || 'سيتم التعيين قريبًا'}</strong></p>
+                </div>
+                <div class="design-ref-container">
+                    <div class="design-ref-actions">
+                        <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
+                    </div>
+                    <div id="design-ref" style="display:none; margin-top:10px;">
+                        <img src="${getDesignImageUrl()}" alt="Design reference"/>
+                    </div>
                 </div>`;
         } else {
             // Unqualified detailed layout (single card with sections)
@@ -1070,10 +1081,24 @@ function loadSuggestedVideos(students) {
                         <button class="btn btn-secondary" onclick="requestMentorChange()">طلب تغيير المنتور</button>
                     </div>
                 </div>
+                <div class="design-ref-container" style="margin-top:12px;">
+                    <div class="design-ref-actions">
+                        <button class="btn btn-secondary" onclick="toggleDesignRef()">عرض/إخفاء نموذج التصميم</button>
+                    </div>
+                    <div id="design-ref" style="display:none; margin-top:10px;">
+                        <img src="${getDesignImageUrl()}" alt="Design reference"/>
+                    </div>
+                </div>
             `;
         }
 
         dashboardPage.querySelector('.container')?.appendChild(section);
+    };
+
+    window.toggleDesignRef = function toggleDesignRef() {
+        const el = document.getElementById('design-ref');
+        if (!el) return;
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
     };
 
     // Mentors listing page (youth view)
